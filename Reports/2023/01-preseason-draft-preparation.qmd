@@ -1,0 +1,273 @@
+---
+title: "Pre-Season AFL Fantasy Report"
+subtitle: "2023 Season"
+format:
+  html:
+      df-print: kable
+      theme: cosmo
+      toc: true
+      self-contained: true
+editor: visual
+author: James Brown
+echo: false
+warning: false
+message: false
+---
+
+```{r}
+# Libraries and functions
+library(tidyverse)
+
+# Load data processing functions
+source("../../Functions/data_processing_functions.R")
+
+# Load in historic data
+player_stats <- read_rds("../../Data/afl_fantasy_2014_2022_data.rds")
+starting_positions_2023 <- read_rds("../../Data/2023_start_positions_and_prices.rds")
+
+# Filter to only players still in current season and add positions
+player_stats <- 
+  player_stats |> 
+  filter(player_full_name %in% starting_positions_2023$player_full_name) |> 
+  left_join(starting_positions_2023 |> select(player_full_name, contains("status")))
+
+# Get player ages tibble to join to output
+player_ages <-
+player_stats |>
+  transmute(player = player_full_name,
+            AGE = round((today() - player_dob) / 365.25, digits = 1)) |> 
+  distinct(player, AGE)
+
+# Get ADPs tibble to join to output
+adps <-
+starting_positions_2023 |> 
+  select(player = player_full_name, ADP = adp) |> 
+  mutate(ADP = ifelse(ADP == 0, NA, ADP))
+```
+
+# Player Statistics by Position
+
+::: panel-tabset
+
+## DEF
+
+```{r}
+#| column: screen
+
+def_2022 <-
+player_stats |>
+  filter(defender_status) |>
+  get_season_summary_stats(season = 2022)
+
+def_last_10 <-
+  player_stats |>
+  filter(defender_status) |>
+  get_last_n_average(n = 10)
+
+def_2021 <-
+  player_stats |>
+  filter(defender_status) |>
+  get_season_summary_stats(season = 2021)
+
+list(def_last_10, def_2022,def_2021) |>
+  reduce(full_join) |>
+  select(
+    player,
+    contains("MIN"),
+    contains("MED"),
+    contains("AVG"),
+    contains("MAX"),
+    contains("SD"),
+    contains("GP")
+  ) |> 
+  left_join(player_ages) |>
+  left_join(adps) |> 
+  relocate(AGE, ADP, .after = player) |> 
+  head(60)
+```
+
+## MID
+
+```{r}
+#| column: screen
+
+mid_2022 <-
+player_stats |>
+  filter(midfield_status) |>
+  get_season_summary_stats(season = 2022)
+
+mid_last_10 <-
+  player_stats |>
+  filter(midfield_status) |>
+  get_last_n_average(n = 10)
+
+mid_2021 <-
+  player_stats |>
+  filter(midfield_status) |>
+  get_season_summary_stats(season = 2021)
+
+list(mid_last_10,mid_2022,mid_2021) |>
+  reduce(full_join) |>
+  select(
+    player,
+    contains("MIN"),
+    contains("MED"),
+    contains("AVG"),
+    contains("MAX"),
+    contains("SD"),
+    contains("GP")
+  )  |> 
+  left_join(player_ages) |>
+  left_join(adps) |> 
+  relocate(AGE, ADP, .after = player) |> 
+  head(80)
+```
+
+## RUCK
+
+```{r}
+#| column: screen
+
+ruck_2022 <-
+player_stats |>
+  filter(ruck_status) |>
+  get_season_summary_stats(season = 2022)
+
+ruck_last_10 <-
+  player_stats |>
+  filter(ruck_status) |>
+  get_last_n_average(n = 10)
+
+ruck_2021 <-
+  player_stats |>
+  filter(ruck_status) |>
+  get_season_summary_stats(season = 2021)
+
+list(ruck_last_10,ruck_2022,ruck_2021) |>
+  reduce(full_join) |>
+  select(
+    player,
+    contains("MIN"),
+    contains("MED"),
+    contains("AVG"),
+    contains("MAX"),
+    contains("SD"),
+    contains("GP")
+  )  |> 
+  left_join(player_ages) |>
+  left_join(adps) |> 
+  relocate(AGE, ADP, .after = player) |> 
+  head(16)
+```
+
+## FWD
+
+```{r}
+#| column: screen
+
+fwd_2022 <-
+player_stats |>
+  filter(forward_status) |>
+  get_season_summary_stats(season = 2022)
+
+fwd_last_10 <-
+  player_stats |>
+  filter(forward_status) |>
+  get_last_n_average(n = 10)
+
+fwd_2021 <-
+  player_stats |>
+  filter(forward_status) |>
+  get_season_summary_stats(season = 2021)
+
+list(fwd_last_10,fwd_2022,fwd_2021) |>
+  reduce(full_join) |>
+  select(
+    player,
+    contains("MIN"),
+    contains("MED"),
+    contains("AVG"),
+    contains("MAX"),
+    contains("SD"),
+    contains("GP")
+  )  |> 
+  left_join(player_ages) |>
+  left_join(adps) |> 
+  relocate(AGE, ADP, .after = player) |> 
+  head(60)
+```
+
+## Overall
+
+```{r}
+#| column: screen
+
+overall_2022 <-
+player_stats |>
+  get_season_summary_stats(season = 2022)
+
+overall_last_10 <-
+  player_stats |>
+  get_last_n_average(n = 10)
+
+overall_2021 <-
+  player_stats |>
+  get_season_summary_stats(season = 2021)
+
+list(overall_last_10,overall_2022,overall_2021) |>
+  reduce(full_join) |>
+  select(
+    player,
+    contains("MIN"),
+    contains("MED"),
+    contains("AVG"),
+    contains("MAX"),
+    contains("SD"),
+    contains("GP")
+  )  |> 
+  left_join(player_ages) |>
+  left_join(adps) |> 
+  relocate(AGE, ADP, .after = player) |> 
+  head(200) |> 
+  arrange(ADP)
+```
+
+:::
+
+# Percentage of Budget to Allocate to Each Position
+
+```{r}
+# Get rostered players for each position
+rostered_players_list <-
+list(
+  "Defenders" = 
+def_2022 |> 
+  arrange(desc(`2022 AVG`)) |> 
+  head(40),
+
+"Midfielders" =
+mid_2022 |> 
+  arrange(desc(`2022 AVG`)) |> 
+  head(56),
+
+"Rucks" =
+ruck_2022 |> 
+  arrange(desc(`2022 AVG`)) |> 
+  head(8),
+
+"Forwards" =
+ fwd_2022 |> 
+  arrange(desc(`2022 AVG`)) |> 
+  head(40))
+ 
+# Get total score for each position
+rostered_players_list |> 
+  map(~ .x |> summarise(total = sum(`2022 AVG`))) |> 
+  reduce(bind_rows) |> 
+  mutate(position = names(rostered_players_list)) |> 
+  mutate(proportion = total / sum(total)) |> 
+  mutate(budget = 300 * proportion) |> 
+  transmute(Position = position,
+         Budget = as.integer(budget))
+```
+
