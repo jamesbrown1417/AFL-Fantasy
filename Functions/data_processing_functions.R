@@ -12,6 +12,7 @@ player_details <-
   fitzRoy::fetch_player_details_afl(season = season) |>
   dplyr::transmute(
     player_id = providerId,
+    player_team = team,
     player_dob = lubridate::ymd(dateOfBirth)
   )
   
@@ -112,7 +113,7 @@ return_table <-
 return_table <-
   return_table |>
   dplyr::left_join(player_details) |> 
-  dplyr::relocate(player_dob, .after = player_full_name)
+  dplyr::relocate(player_dob, player_team, .after = player_full_name)
 
 # Return Table
 return(return_table)

@@ -1,0 +1,248 @@
+---
+title: "Weekly Fantasy League Report"
+subtitle: "2023 Season"
+format:
+  html:
+      df-print: kable
+      theme: cosmo
+      toc: true
+      self-contained: true
+editor: visual
+author: James Brown
+echo: false
+warning: false
+message: false
+---
+
+```{r}
+# libraries and functions
+library(tidyverse)
+library(request)
+
+# Get URL of data from API
+url = "https://fantasy.afl.com.au/data/afl/players.json?_=1677977794603"
+
+# Get Data from API
+scraped_fantasy_data <-
+  api(url) %>%
+  http()
+
+get_afl_api_player_data <- function(player_data){
+  # Name and price data
+  first_name = player_data$first_name
+  last_name = player_data$last_name
+  id = player_data$id
+  
+  # Return Dataframe with each derived variable as a column
+  tibble(
+    first_name,
+    last_name,
+    id
+  )
+}
+
+##%######################################################%##
+#                                                          #
+####                  Get output data                   ####
+#                                                          #
+##%######################################################%##
+
+afl_player_api_data <-
+  scraped_fantasy_data |> 
+  map(get_afl_api_player_data) |> 
+  reduce(bind_rows) |>
+  mutate(player_full_name = paste(first_name, last_name)) |> 
+  relocate(player_full_name, .after = last_name) |> 
+  select(player_full_name, id)
+```
+
+```{r}
+# Get Fantasy Website Team Rosters
+round_1_json <- jsonlite::fromJSON("../../Data/round_1_scores.json", simplifyDataFrame = TRUE)
+
+# Get data from json
+# Defenders
+defenders <-
+  round_1_json$result |>
+  unnest(lineup) |> 
+  unnest(`1`) |> 
+  select(name, firstname, lastname, id = `1`) |> 
+  mutate(position = "Defender") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+midfielders <-
+  round_1_json$result |>
+  unnest(lineup) |> 
+  unnest(`2`) |> 
+  select(name, firstname, lastname, id = `2`) |> 
+  mutate(position = "Midfield") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+rucks <-
+  round_1_json$result |>
+  unnest(lineup) |> 
+  unnest(`3`) |> 
+  select(name, firstname, lastname, id = `3`) |> 
+  mutate(position = "Ruck") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+forwards <-
+  round_1_json$result |>
+  unnest(lineup) |> 
+  unnest(`4`) |> 
+  select(name, firstname, lastname, id = `4`) |> 
+  mutate(position = "Forward") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+bench <-
+  round_1_json$result |>
+  unnest(lineup) |> 
+  unnest(bench) |> 
+  select(name, firstname, lastname, id = bench) |> 
+  mutate(position = "Bench") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+emergencies <-
+  round_1_json$result |>
+  unnest(lineup) |>
+  select(name, firstname, lastname, emergency) |>
+  unnest(emergency) |>
+  pivot_longer(cols = `1`:`4`,
+               names_to = "emergency_number",
+               values_to = "id") |>
+  filter(id != 0) |>
+  left_join(afl_player_api_data) |>
+  mutate(
+    position = case_when(
+      emergency_number == 1 ~ "Emergency Defender",
+      emergency_number == 2 ~ "Emergency Midfielder",
+      emergency_number == 3 ~ "Emergency Ruck",
+      emergency_number == 4 ~ "Emergency Forward"
+    )
+  ) |>
+  transmute(name, firstname, lastname, position, player_full_name)
+
+```
+```{r}
+# Get scores and TOG
+all_team_players <- bind_rows(defenders, midfielders, rucks, forwards, bench, emergencies)
+
+# Get all fantasy scores
+scores <-
+  get_fantasy_data(season = 2023, round_number = 1) |>
+  select(player_full_name, fantasy_points, contains("tog"))
+
+# Combine
+all_scores <-
+all_team_players |>
+  left_join(scores) |> 
+  replace_na(list(fantasy_points = 0, tog_percentage = 0))
+```
+
+## Positional Graphs
+
+### Defenders
+
+```{r}
+all_defender_scores <-
+  all_scores |> 
+  group_by(name) |> 
+  filter(str_detect(position, "Defender")) |> 
+  arrange(name) |>
+  mutate(emergency_present = str_detect(position, "Emergency")) |> 
+  mutate(emergency_present = max(emergency_present)) |> 
+
+all_defender_scores |>
+  summarise(defender_total = sum(fantasy_points)) |>
+  arrange(desc(defender_total)) |>
+  ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
+  geom_col(fill = "orangered1", alpha = 0.8) +
+  labs(x = "Team", y = "Points Scored by Defence") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  ggtitle("Defence")
+```
+### Midfielders
+
+```{r}
+all_midfielder_scores <-
+  all_scores |> 
+  group_by(name) |> 
+  filter(str_detect(position, "Midfield")) |> 
+  arrange(name) |>
+  mutate(emergency_present = str_detect(position, "Emergency")) |> 
+  mutate(emergency_present = max(emergency_present)) |> 
+  filter((tog_percentage > 50 & emergency_present == 1) | emergency_present == 0)
+
+all_midfielder_scores |>
+  summarise(defender_total = sum(fantasy_points)) |>
+  arrange(desc(defender_total)) |>
+  ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
+  geom_col(fill = "orangered1", alpha = 0.8) +
+  labs(x = "Team", y = "Points Scored by Midfield") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  ggtitle("Midfield")
+```
+
+### Rucks
+
+```{r}
+all_ruck_scores <-
+  all_scores |> 
+  group_by(name) |> 
+  filter(str_detect(position, "Ruck")) |> 
+  arrange(name) |>
+  mutate(emergency_present = str_detect(position, "Emergency")) |> 
+  mutate(emergency_present = max(emergency_present)) |> 
+
+all_ruck_scores |>
+  summarise(defender_total = sum(fantasy_points)) |>
+  arrange(desc(defender_total)) |>
+  ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
+  geom_col(fill = "orangered1", alpha = 0.8) +
+  labs(x = "Team", y = "Points Scored by Ruck") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  ggtitle("Ruck")
+```
+
+### Forwards
+
+```{r}
+all_defender_scores <-
+  all_scores |> 
+  group_by(name) |> 
+  filter(str_detect(position, "Defender")) |> 
+  arrange(name) |>
+  mutate(emergency_present = str_detect(position, "Emergency")) |> 
+  mutate(emergency_present = max(emergency_present)) |> 
+  filter((tog_percentage > 50 & emergency_present == 1) | emergency_present == 0)
+
+all_defender_scores |>
+  summarise(defender_total = sum(fantasy_points)) |>
+  arrange(desc(defender_total)) |>
+  ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
+  geom_col(fill = "orangered1", alpha = 0.8) +
+  labs(x = "Team", y = "Points Scored by Defence") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = 1
+  )) +
+  ggtitle("Defence")
+```

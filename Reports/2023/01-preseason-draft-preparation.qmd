@@ -48,7 +48,6 @@ starting_positions_2023 |>
 # Player Statistics by Position
 
 ::: panel-tabset
-
 ## DEF
 
 ```{r}
@@ -231,7 +230,6 @@ list(overall_last_10,overall_2022,overall_2021) |>
   head(200) |> 
   arrange(ADP)
 ```
-
 :::
 
 # Percentage of Budget to Allocate to Each Position
@@ -270,4 +268,3 @@ rostered_players_list |>
   transmute(Position = position,
          Budget = as.integer(budget))
 ```
-

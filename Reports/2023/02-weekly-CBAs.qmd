@@ -1,0 +1,42 @@
+---
+title: "Weekly CBA Report"
+subtitle: "2023 Season"
+format:
+  html:
+      df-print: kable
+      theme: cosmo
+      toc: true
+      self-contained: true
+editor: visual
+author: James Brown
+echo: false
+warning: false
+message: false
+---
+
+```{r}
+# Libraries and functions
+library(tidyverse)
+
+# Load data processing functions
+source("../../Functions/data_processing_functions.R")
+```
+
+```{r}
+# Get Data
+current_round_data <- get_fantasy_data(season = 2023, round_number = 1)
+
+# Get only players with at least one CBA
+current_round_cbas <-
+current_round_data |>
+  select(player_full_name, player_team, match_result_string, cbas, cba_percentage) |> 
+  filter(cba_percentage > 0) |> 
+  arrange(player_team, desc(cba_percentage))
+
+# Output each team DF
+for (team in unique(current_round_cbas$player_team)){
+  team_df <- current_round_cbas |> filter(player_team == team)
+  print(team_df)
+}
+```
+
