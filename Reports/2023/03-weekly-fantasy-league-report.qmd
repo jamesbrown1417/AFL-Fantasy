@@ -19,8 +19,14 @@ message: false
 library(tidyverse)
 library(request)
 
+# Not in function
+`%notin%` <- Negate(`%in%`)
+
 # Get URL of data from API
 url = "https://fantasy.afl.com.au/data/afl/players.json?_=1677977794603"
+
+# Load data processing functions
+source("../../Functions/data_processing_functions.R")
 
 # Get Data from API
 scraped_fantasy_data <-
@@ -32,12 +38,14 @@ get_afl_api_player_data <- function(player_data){
   first_name = player_data$first_name
   last_name = player_data$last_name
   id = player_data$id
+  dob = player_data$dob
   
   # Return Dataframe with each derived variable as a column
   tibble(
     first_name,
     last_name,
-    id
+    id,
+    dob
   )
 }
 
@@ -53,7 +61,14 @@ afl_player_api_data <-
   reduce(bind_rows) |>
   mutate(player_full_name = paste(first_name, last_name)) |> 
   relocate(player_full_name, .after = last_name) |> 
-  select(player_full_name, id)
+  select(player_full_name, id, dob)
+
+# Ages
+ages <-
+  afl_player_api_data |> select(player_full_name, dob)
+
+afl_player_api_data <- 
+  afl_player_api_data |> select(-dob)
 ```
 
 ```{r}
@@ -128,6 +143,7 @@ emergencies <-
   transmute(name, firstname, lastname, position, player_full_name)
 
 ```
+
 ```{r}
 # Get scores and TOG
 all_team_players <- bind_rows(defenders, midfielders, rucks, forwards, bench, emergencies)
@@ -153,9 +169,12 @@ all_defender_scores <-
   all_scores |> 
   group_by(name) |> 
   filter(str_detect(position, "Defender")) |> 
-  arrange(name) |>
   mutate(emergency_present = str_detect(position, "Emergency")) |> 
   mutate(emergency_present = max(emergency_present)) |> 
+  mutate(fantasy_points = ifelse(tog_percentage < 50 & emergency_present == 1, 0, fantasy_points)) |> 
+  mutate(injured_player = max(fantasy_points == 0)) |> 
+  arrange(name, position) |> 
+  filter(!(str_detect(position, "Emergency") & injured_player == 0))
 
 all_defender_scores |>
   summarise(defender_total = sum(fantasy_points)) |>
@@ -163,13 +182,12 @@ all_defender_scores |>
   ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
   geom_col(fill = "orangered1", alpha = 0.8) +
   labs(x = "Team", y = "Points Scored by Defence") +
-  theme(axis.text.x = element_text(
-    angle = 90,
-    vjust = 0.5,
-    hjust = 1
-  )) +
-  ggtitle("Defence")
+  ggtitle("Defence") +
+  ggthemes::theme_fivethirtyeight() +
+  coord_flip() +
+  scale_y_continuous(breaks = seq(0, 600, 50))
 ```
+
 ### Midfielders
 
 ```{r}
@@ -177,23 +195,23 @@ all_midfielder_scores <-
   all_scores |> 
   group_by(name) |> 
   filter(str_detect(position, "Midfield")) |> 
-  arrange(name) |>
   mutate(emergency_present = str_detect(position, "Emergency")) |> 
   mutate(emergency_present = max(emergency_present)) |> 
-  filter((tog_percentage > 50 & emergency_present == 1) | emergency_present == 0)
+  mutate(fantasy_points = ifelse(tog_percentage < 50 & emergency_present == 1, 0, fantasy_points)) |> 
+  mutate(injured_player = max(fantasy_points == 0)) |> 
+  arrange(name, position) |> 
+  filter(!(str_detect(position, "Emergency") & injured_player == 0))
 
 all_midfielder_scores |>
-  summarise(defender_total = sum(fantasy_points)) |>
-  arrange(desc(defender_total)) |>
-  ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
+  summarise(midfielder_total = sum(fantasy_points)) |>
+  arrange(desc(midfielder_total)) |>
+  ggplot(mapping = aes(x = reorder(name, desc(midfielder_total)), y = midfielder_total)) +
   geom_col(fill = "orangered1", alpha = 0.8) +
   labs(x = "Team", y = "Points Scored by Midfield") +
-  theme(axis.text.x = element_text(
-    angle = 90,
-    vjust = 0.5,
-    hjust = 1
-  )) +
-  ggtitle("Midfield")
+  ggtitle("Midfield") +
+  ggthemes::theme_fivethirtyeight() +
+  coord_flip() +
+  scale_y_continuous(breaks = seq(0, 750, 50))
 ```
 
 ### Rucks
@@ -203,46 +221,208 @@ all_ruck_scores <-
   all_scores |> 
   group_by(name) |> 
   filter(str_detect(position, "Ruck")) |> 
-  arrange(name) |>
   mutate(emergency_present = str_detect(position, "Emergency")) |> 
   mutate(emergency_present = max(emergency_present)) |> 
+  mutate(fantasy_points = ifelse(tog_percentage < 50 & emergency_present == 1, 0, fantasy_points)) |> 
+  mutate(injured_player = max(fantasy_points == 0)) |> 
+  arrange(name, position) |> 
+  filter(!(str_detect(position, "Emergency") & injured_player == 0))
 
 all_ruck_scores |>
-  summarise(defender_total = sum(fantasy_points)) |>
-  arrange(desc(defender_total)) |>
-  ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
+  summarise(ruck_total = sum(fantasy_points)) |>
+  arrange(desc(ruck_total)) |>
+  ggplot(mapping = aes(x = reorder(name, desc(ruck_total)), y = ruck_total)) +
   geom_col(fill = "orangered1", alpha = 0.8) +
   labs(x = "Team", y = "Points Scored by Ruck") +
-  theme(axis.text.x = element_text(
-    angle = 90,
-    vjust = 0.5,
-    hjust = 1
-  )) +
-  ggtitle("Ruck")
+  ggtitle("Ruck") +
+  ggthemes::theme_fivethirtyeight() +
+  coord_flip() +
+  scale_y_continuous(breaks = seq(0, 150, 25))
 ```
 
 ### Forwards
 
 ```{r}
-all_defender_scores <-
+all_forward_scores <-
   all_scores |> 
   group_by(name) |> 
-  filter(str_detect(position, "Defender")) |> 
-  arrange(name) |>
+  filter(str_detect(position, "Forward")) |> 
   mutate(emergency_present = str_detect(position, "Emergency")) |> 
   mutate(emergency_present = max(emergency_present)) |> 
-  filter((tog_percentage > 50 & emergency_present == 1) | emergency_present == 0)
+  filter((tog_percentage > 50 & emergency_present == 1) | emergency_present == 0) |> 
+  mutate(injured_player = max(fantasy_points == 0)) |> 
+  arrange(name, position) |> 
+  filter(!(str_detect(position, "Emergency") & injured_player == 0))
 
-all_defender_scores |>
-  summarise(defender_total = sum(fantasy_points)) |>
-  arrange(desc(defender_total)) |>
-  ggplot(mapping = aes(x = reorder(name, desc(defender_total)), y = defender_total)) +
+all_forward_scores |>
+  summarise(forward_total = sum(fantasy_points)) |>
+  arrange(desc(forward_total)) |>
+  ggplot(mapping = aes(x = reorder(name, desc(forward_total)), y = forward_total)) +
   geom_col(fill = "orangered1", alpha = 0.8) +
-  labs(x = "Team", y = "Points Scored by Defence") +
-  theme(axis.text.x = element_text(
-    angle = 90,
-    vjust = 0.5,
-    hjust = 1
-  )) +
-  ggtitle("Defence")
+  labs(x = "Team", y = "Points Scored by Forwards") +
+  ggtitle("Forwards") +
+  ggthemes::theme_fivethirtyeight() +
+  coord_flip() +
+  scale_y_continuous(breaks = seq(0, 600, 50))
 ```
+
+## Average Score For Each Position
+
+```{r}
+bind_rows(all_defender_scores,
+          all_midfielder_scores,
+          all_ruck_scores,
+          all_forward_scores) |>
+  filter(fantasy_points > 0) |>
+  mutate(position = str_replace(position, "Emergency Defender", "Defender")) |>
+  mutate(position = str_replace(position, "Emergency Midfielder", "Midfield")) |>
+  mutate(position = str_replace(position, "Emergency Ruck", "Ruck")) |>
+  mutate(position = str_replace(position, "Emergency Forward", "Forward")) |> 
+  group_by(position) |> 
+  summarise(`Avg Score` = round(mean(fantasy_points), 2)) |> 
+  arrange(desc(`Avg Score`))
+  
+```
+
+## Best Scores by Position
+
+### Defenders
+```{r}
+all_defender_scores |> 
+  ungroup() |> 
+  arrange(desc(fantasy_points)) |>
+  slice_head(n = 10) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points)
+```
+
+### Midfielders
+```{r}
+all_midfielder_scores |> 
+  ungroup() |> 
+  arrange(desc(fantasy_points)) |>
+  slice_head(n = 10) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points)
+```
+
+### Rucks
+```{r}
+all_ruck_scores |> 
+  ungroup() |> 
+  arrange(desc(fantasy_points)) |>
+  slice_head(n = 4) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points)
+```
+
+### Forwards
+```{r}
+all_forward_scores |> 
+  ungroup() |> 
+  arrange(desc(fantasy_points)) |>
+  slice_head(n = 10) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points)
+```
+
+## Worst Scores by Position
+
+### Defenders
+```{r}
+all_defender_scores |> 
+  ungroup() |> 
+  arrange(fantasy_points) |>
+  filter(fantasy_points > 0) |> 
+  slice_head(n = 10) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points) 
+```
+
+### Midfielders
+```{r}
+all_midfielder_scores |> 
+  ungroup() |> 
+  arrange(fantasy_points) |>
+  filter(fantasy_points > 0) |>   slice_head(n = 10) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points)
+```
+
+### Rucks
+```{r}
+all_ruck_scores |>
+  ungroup() |>
+  arrange(fantasy_points) |>
+  filter(fantasy_points > 0) |>
+  slice_head(n = 4) |>
+  transmute(
+    name,
+    coach = paste(firstname, lastname),
+    position,
+    player = player_full_name,
+    fantasy_points
+  )
+```
+
+### Forwards
+```{r}
+all_forward_scores |> 
+  ungroup() |> 
+  arrange(fantasy_points) |>
+  filter(fantasy_points > 0) |>
+  slice_head(n = 10) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points)
+```
+
+## Best Unused Bench Players
+
+```{r}
+bench |> 
+  filter(player_full_name %notin% all_defender_scores$player_full_name) |> 
+  filter(player_full_name %notin% all_midfielder_scores$player_full_name) |> 
+  filter(player_full_name %notin% all_ruck_scores$player_full_name) |> 
+  filter(player_full_name %notin% all_forward_scores$player_full_name) |> 
+  left_join(scores) |>
+  arrange(desc(fantasy_points)) |> 
+  slice_head(n = 5) |> 
+  transmute(name, coach = paste(firstname, lastname), position, player = player_full_name, fantasy_points)
+
+```
+
+## Tonnes by Team
+```{r}
+bind_rows(all_defender_scores,
+          all_midfielder_scores,
+          all_ruck_scores,
+          all_forward_scores) |> 
+  ungroup() |> 
+  filter(fantasy_points >= 100) |> 
+  group_by(name) |> 
+  tally() |> 
+  arrange(desc(n))
+```
+
+## 50s or Worse by Team
+```{r}
+bind_rows(all_defender_scores,
+          all_midfielder_scores,
+          all_ruck_scores,
+          all_forward_scores) |> 
+  ungroup() |> 
+  filter(fantasy_points <= 60) |> 
+  group_by(name) |> 
+  tally() |> 
+  arrange(desc(n))
+```
+
+## Average Age Of Fielded Players
+```{r}
+# Avg player ages
+bind_rows(all_defender_scores,
+          all_midfielder_scores,
+          all_ruck_scores,
+          all_forward_scores) |> 
+  filter(fantasy_points > 0) |> 
+  left_join(ages) |>
+  mutate(player_age = today() - ymd(dob)) |> 
+  mutate(player_age = as.numeric(player_age) / 365.25) |> 
+  group_by(name) |> 
+  summarise(`Avg Age` = round(mean(player_age), digits = 2)) |> 
+  arrange(desc(`Avg Age`))
+```
+
