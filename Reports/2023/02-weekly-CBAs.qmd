@@ -22,6 +22,8 @@ library(tidyverse)
 source("../../Functions/data_processing_functions.R")
 ```
 
+## CBAs
+
 ```{r}
 # Get Data
 current_round_data <- get_fantasy_data(season = 2023, round_number = 1)
@@ -34,9 +36,29 @@ current_round_data |>
   arrange(player_team, desc(cba_percentage))
 
 # Output each team DF
-for (team in unique(current_round_cbas$player_team)){
-  team_df <- current_round_cbas |> filter(player_team == team)
-  print(team_df)
-}
+map(
+  unique(current_round_cbas$player_team),
+  ~ current_round_cbas |> filter(player_team == .x)
+)
+
 ```
 
+## Kick-ins
+
+```{r}
+# Get only players with at least one kickin
+current_round_kickins <-
+current_round_data |>
+  select(player_full_name, player_team, match_result_string, kick_ins_play_on) |> 
+  filter(kick_ins_play_on > 0) |> 
+  group_by(player_team) |> 
+  mutate(kick_in_percentage = kick_ins_play_on / sum(kick_ins_play_on)) |> 
+  arrange(player_team, desc(kick_in_percentage))
+
+# Output each team DF
+map(
+  unique(current_round_kickins$player_team),
+  ~ current_round_kickins |> filter(player_team == .x)
+)
+
+```
