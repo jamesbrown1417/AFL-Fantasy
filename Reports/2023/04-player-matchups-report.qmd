@@ -1,0 +1,64 @@
+---
+title: ""
+execute:
+  echo: false
+  message: false
+  warning: false
+author: "James Brown"
+date: "2023-03-23"
+format:
+  html:
+    df-print: default
+    theme: cosmo
+    self-contained: true
+    toc: true
+    toc-depth: 3
+    fig-width: 8
+    fig-height: 6
+editor: visual
+---
+
+```{r}
+# Libraries and functions
+library(tidyverse)
+
+# Load data processing functions
+source("../../Functions/data_processing_functions.R")
+
+# Get current season data
+current_season_data <-
+  get_fantasy_data(season = lubridate::year(Sys.Date()))
+
+# Historical
+prev_season_data <- readr::read_rds("../../Data/afl_fantasy_2014_2022_data.rds")
+  
+# Combine to get total
+player_history <- dplyr::bind_rows(current_season_data, prev_season_data)
+  
+# Create function to get scoring history
+get_scoring_history <-
+  function(df = player_history,
+           player_name,
+           opposition = NULL) {
+    # Filter to desired player
+    df <-
+      df |>
+      dplyr::filter(player_full_name == player_name) |>
+      dplyr::arrange(dplyr::desc(start_time_utc))
+    
+    # Filter opposition
+    if (!is.null(opposition)) {
+      df <-
+        df |>
+        dplyr::filter(opposition_team == opposition)
+    }
+    
+    # Return Data
+    return(df)
+  }
+```
+
+```{r}
+get_scoring_history(player_name = "Tom Mitchell", opposition = "Port Adelaide")
+```
+

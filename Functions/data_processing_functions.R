@@ -115,6 +115,12 @@ return_table <-
   dplyr::left_join(player_details) |> 
   dplyr::relocate(player_dob, player_team, .after = player_full_name)
 
+# Add opposition team variable
+return_table <- 
+  return_table |> 
+  dplyr::mutate(opposition_team = dplyr::if_else(player_team == home_team, away_team, home_team)) |> 
+  dplyr::relocate(opposition_team, .after = player_team)
+
 # Return Table
 return(return_table)
 }
@@ -198,3 +204,4 @@ get_last_n_average <- function(df, n) {
   # return data
   return(output)
 }
+
