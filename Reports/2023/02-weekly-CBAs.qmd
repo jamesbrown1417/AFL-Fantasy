@@ -30,7 +30,7 @@ source("../../Functions/data_processing_functions.R")
 #| results: asis
 
 # Get Data
-current_round_data <- get_fantasy_data(season = 2023, round_number = 2)
+current_round_data <- get_fantasy_data(season = 2023, round_number = 1)
 
 # Get only players with at least one CBA
 current_round_cbas <-

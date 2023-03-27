@@ -3,11 +3,14 @@ title: "CBA Changes Report"
 subtitle: "2023 Season"
 format:
   html:
-      df-print: kable
+      df-print: paged
       theme: cosmo
       self-contained: true
 editor: visual
 author: James Brown
+echo: false
+warning: false
+message: false
 ---
 
 ```{r}
@@ -21,6 +24,8 @@ source("../../Functions/data_processing_functions.R")
 ```
 
 ```{r}
+#| results: asis
+
 # Get Data
 current_season_data <- get_fantasy_data(season = 2023)
 
@@ -45,8 +50,12 @@ season_cbas |>
   filter(!is.na(`CBA Change`) & `CBA Change` != 0)
 
 # List of Increases and Decreases
-cba_changes |> arrange(desc(`CBA Change`))
-cba_changes |> arrange(`CBA Change`)
+df_list <-
+  list(
+    "Increases" = cba_changes |> arrange(desc(`CBA Change`)) |> head(20),
+    "Decreases" = cba_changes |> arrange(`CBA Change`) |> head(20)
+)
 
+# Output tables
+maketabs(df_list, wide = FALSE)
 ```
-

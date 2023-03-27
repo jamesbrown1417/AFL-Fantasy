@@ -1,5 +1,5 @@
 ---
-title: ""
+title: "Player Matchups Report"
 execute:
   echo: false
   message: false
@@ -8,7 +8,7 @@ author: "James Brown"
 date: "2023-03-23"
 format:
   html:
-    df-print: default
+    df-print: paged
     theme: cosmo
     self-contained: true
     toc: true
@@ -21,6 +21,7 @@ editor: visual
 ```{r}
 # Libraries and functions
 library(tidyverse)
+library(qreport)
 
 # Load data processing functions
 source("../../Functions/data_processing_functions.R")
@@ -57,7 +58,55 @@ get_scoring_history <-
     return(df)
   }
 ```
+## Best and Worst Teams to Play
+```{r}
+#| tbl-column: 20
+
+# Get player positions
+positions <-
+  fitzRoy::fetch_player_details_afl(season = 2023) |> 
+  transmute(player_full_name = str_glue("{firstName} {surname}"),
+            position = str_replace(position, "_", " ")) |> 
+  mutate(position = str_to_title(position))
+
+# Join with position data
+overall <-
+current_season_data |> 
+  left_join(positions) |> 
+  filter(fantasy_points != 0 & !is.na(fantasy_points)) |> 
+  summarise(total_points = sum(fantasy_points), .by = opposition_team) |> 
+  arrange(desc(total_points))
+
+overall
+```
 
 ```{r}
-get_scoring_history(player_name = "Tom Mitchell", opposition = "Port Adelaide")
+#| results: asis
+
+# By Position
+by_position <- 
+  current_season_data |> 
+  left_join(positions) |> 
+  filter(fantasy_points != 0 & !is.na(fantasy_points)) |> 
+  summarise(avg_points = mean(fantasy_points), n = n(), .by = c(opposition_team, position)) |> 
+  arrange(desc(avg_points))
+
+# Positions
+unique_positions <-
+  by_position |>
+  distinct(position) |> 
+  pull(position)
+
+# Get list
+map(unique_positions, function(x) by_position |> filter(position == x) |> arrange(desc(avg_points))) |> 
+  set_names(unique_positions) |> 
+  maketabs()
 ```
+
+
+
+<!-- ## Player History -->
+
+<!-- ```{r} -->
+<!-- get_scoring_history(player_name = "Tom Mitchell", opposition = "Port Adelaide") -->
+<!-- ``` -->
