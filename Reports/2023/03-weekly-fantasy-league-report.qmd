@@ -1,6 +1,6 @@
 ---
 title: "Weekly Fantasy League Report"
-subtitle: "2023 Season - Round 1"
+subtitle: "2023 Season - Round 2"
 format:
   html:
       df-print: kable
@@ -73,12 +73,12 @@ afl_player_api_data <-
 
 ```{r}
 # Get Fantasy Website Team Rosters
-round_1_json <- jsonlite::fromJSON("../../Data/round_1_scores.json", simplifyDataFrame = TRUE)
+round_2_json <- jsonlite::fromJSON("../../Data/Fantasy-League-Scores/2023-ROUND-02-SCORES.json", simplifyDataFrame = TRUE)
 
 # Get data from json
 # Defenders
 defenders <-
-  round_1_json$result |>
+  round_2_json$result |>
   unnest(lineup) |> 
   unnest(`1`) |> 
   select(name, firstname, lastname, id = `1`) |> 
@@ -87,7 +87,7 @@ defenders <-
   select(-id)
 
 midfielders <-
-  round_1_json$result |>
+  round_2_json$result |>
   unnest(lineup) |> 
   unnest(`2`) |> 
   select(name, firstname, lastname, id = `2`) |> 
@@ -96,7 +96,7 @@ midfielders <-
   select(-id)
 
 rucks <-
-  round_1_json$result |>
+  round_2_json$result |>
   unnest(lineup) |> 
   unnest(`3`) |> 
   select(name, firstname, lastname, id = `3`) |> 
@@ -105,7 +105,7 @@ rucks <-
   select(-id)
 
 forwards <-
-  round_1_json$result |>
+  round_2_json$result |>
   unnest(lineup) |> 
   unnest(`4`) |> 
   select(name, firstname, lastname, id = `4`) |> 
@@ -114,7 +114,7 @@ forwards <-
   select(-id)
 
 bench <-
-  round_1_json$result |>
+  round_2_json$result |>
   unnest(lineup) |> 
   unnest(bench) |> 
   select(name, firstname, lastname, id = bench) |> 
@@ -123,7 +123,7 @@ bench <-
   select(-id)
 
 emergencies <-
-  round_1_json$result |>
+  round_2_json$result |>
   unnest(lineup) |>
   select(name, firstname, lastname, emergency) |>
   unnest(emergency) |>
@@ -150,7 +150,7 @@ all_team_players <- bind_rows(defenders, midfielders, rucks, forwards, bench, em
 
 # Get all fantasy scores
 scores <-
-  get_fantasy_data(season = 2023, round_number = 1) |>
+  get_fantasy_data(season = 2023, round_number = 2) |>
   select(player_full_name, fantasy_points, contains("tog"))
 
 # Combine
@@ -425,4 +425,6 @@ bind_rows(all_defender_scores,
   summarise(`Avg Age` = round(mean(player_age), digits = 2)) |> 
   arrange(desc(`Avg Age`))
 ```
+
+
 
