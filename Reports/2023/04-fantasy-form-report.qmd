@@ -1,0 +1,333 @@
+---
+title: "Fantasy Player Form Report"
+subtitle: "2022 Season"
+format:
+  html:
+      df-print: paged
+      theme: cosmo
+      self-contained: true
+      toc: true
+editor: visual
+author: James Brown
+---
+
+```{r}
+#| label: load-packages-and-data
+#| include: false
+library(tidyverse)
+combined_stats_table <- read_rds("../../../Data/RDS-files/combined_stats_table_2022.rds")
+```
+
+```{r}
+#| label: prepare-data
+#| include: false
+
+##%######################################################%##
+#                                                          #
+####          Get three and five game averages          ####
+#                                                          #
+##%######################################################%##
+
+# 3-game average
+three_game_average <-
+combined_stats_table %>%
+  filter(games_played >= 5) %>%
+  filter(TOG > 70) %>%
+  group_by(player_name) %>%
+  filter(row_number() > (max(row_number()) - 3)) %>%
+  summarise(avg_score_last_3 = mean(fantasy_points, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(avg_score_last_3))
+
+# 5-game average
+five_game_average <-
+  combined_stats_table %>%
+  filter(games_played >= 5) %>%
+  filter(TOG > 70) %>%
+  group_by(player_name) %>%
+  filter(row_number() > (max(row_number()) - 5)) %>%
+  summarise(avg_score_last_5 = mean(fantasy_points, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(avg_score_last_5))
+
+  
+# overall average
+total_average <-
+  combined_stats_table %>%
+  filter(games_played >= 5) %>%
+  filter(TOG > 70) %>%
+  group_by(player_name) %>%
+  summarise(avg_score_total = mean(fantasy_points, na.rm = TRUE)) %>%
+  ungroup() %>%
+  arrange(desc(avg_score_total))
+
+##%######################################################%##
+#                                                          #
+####  Find in-form and out-of-form players by average   ####
+#                                                          #
+##%######################################################%##
+
+# Find Players who have gained form
+all_averages <-
+total_average %>%
+  left_join(three_game_average) %>%
+  left_join(five_game_average) %>%
+  mutate(last_3_vs_ave = avg_score_last_3 - avg_score_total,
+         last_5_vs_ave = avg_score_last_5 - avg_score_total)
+
+performing_above_avg_3 <-
+  all_averages %>%
+  select(-avg_score_last_5, -last_5_vs_ave) %>%
+  arrange(desc(last_3_vs_ave)) %>%
+  head(30)
+  
+performing_above_avg_5 <-
+  all_averages %>%
+  select(-avg_score_last_3, -last_3_vs_ave) %>%
+  arrange(desc(last_5_vs_ave)) %>%
+  head(30)
+
+running_hot_last_3 <-
+  all_averages %>%
+  transmute(player_name, avg_score_last_3 = round(avg_score_last_3, 2)) %>%
+  arrange(desc(avg_score_last_3)) %>%
+  filter(avg_score_last_3 > 80)
+  
+running_hot_last_5 <-
+  all_averages %>%
+  transmute(player_name, avg_score_last_5 = round(avg_score_last_5, 2)) %>%
+  arrange(desc(avg_score_last_5)) %>%
+  filter(avg_score_last_5 > 80)
+
+# Find players who have lost form
+performing_below_avg_3 <-
+  all_averages %>%
+  select(-avg_score_last_5, -last_5_vs_ave) %>%
+  arrange(last_3_vs_ave) %>%
+  filter(avg_score_total >= 70) %>%
+  head(30)
+
+performing_below_avg_5 <-
+  all_averages %>%
+  select(-avg_score_last_3, -last_3_vs_ave) %>%
+  arrange(last_5_vs_ave) %>%
+  filter(avg_score_total >= 70) %>%
+  head(30)
+
+```
+
+## Most In-Form Players
+
+::: panel-tabset
+## Last 5
+
+```{r}
+#| echo: false
+#| rows.print: 20
+
+
+running_hot_last_5 %>%
+  transmute(Player = player_name,
+         `5-Game Average` = avg_score_last_5 %>% round(1))
+```
+
+## Last 3
+
+```{r}
+#| echo: false
+#| rows.print: 20
+
+running_hot_last_3 %>%
+  transmute(Player = player_name,
+         `3-Game Average` = avg_score_last_3 %>% round(1))
+```
+:::
+
+## Biggest Scores Last Round
+::: panel-tabset
+
+## Defenders
+
+```{r}
+#| echo: false
+
+combined_stats_table %>%
+  ungroup() %>%
+  filter(round_number == max(round_number)) %>%
+  filter(fantasy_defender_status) %>%
+  filter(fantasy_points > 0) %>%
+  arrange(desc(fantasy_points)) %>%
+  select(Player = player_name,
+         Season,
+         Rd = round_number,
+         AF = fantasy_points,
+         K = kicks,
+         H = handballs,
+         T = tackles,
+         M = marks,
+         G = goals,
+         B = behinds,
+         HO = hitouts,
+         FF = freesFor,
+         FA = freesAgainst,
+         Opposition = opposition_team,
+         Venue = venue)
+```
+
+## Midfielders
+
+```{r}
+#| echo: false
+
+combined_stats_table %>%
+  ungroup() %>%
+  filter(round_number == max(round_number)) %>%
+  filter(fantasy_midfield_status) %>%
+  filter(fantasy_points > 0) %>%
+  arrange(desc(fantasy_points)) %>%
+  select(Player = player_name,
+         Season,
+         Rd = round_number,
+         AF = fantasy_points,
+         K = kicks,
+         H = handballs,
+         T = tackles,
+         M = marks,
+         G = goals,
+         B = behinds,
+         HO = hitouts,
+         FF = freesFor,
+         FA = freesAgainst,
+         Opposition = opposition_team,
+         Venue = venue)
+```
+
+## Rucks
+
+```{r}
+#| echo: false
+
+combined_stats_table %>%
+  ungroup() %>%
+  filter(round_number == max(round_number)) %>%
+  filter(fantasy_ruck_status) %>%
+  filter(fantasy_points > 0) %>%
+  arrange(desc(fantasy_points)) %>%
+  select(Player = player_name,
+         Season,
+         Rd = round_number,
+         AF = fantasy_points,
+         K = kicks,
+         H = handballs,
+         T = tackles,
+         M = marks,
+         G = goals,
+         B = behinds,
+         HO = hitouts,
+         FF = freesFor,
+         FA = freesAgainst,
+         Opposition = opposition_team,
+         Venue = venue)
+```
+
+## Forwards
+
+```{r}
+#| echo: false
+
+combined_stats_table %>%
+  ungroup() %>%
+  filter(round_number == max(round_number)) %>%
+  filter(fantasy_forward_status) %>%
+  filter(fantasy_points > 0) %>%
+  arrange(desc(fantasy_points)) %>%
+  select(Player = player_name,
+         Season,
+         Rd = round_number,
+         AF = fantasy_points,
+         K = kicks,
+         H = handballs,
+         T = tackles,
+         M = marks,
+         G = goals,
+         B = behinds,
+         HO = hitouts,
+         FF = freesFor,
+         FA = freesAgainst,
+         Opposition = opposition_team,
+         Venue = venue)
+```
+
+:::
+
+## Form Changes
+
+### Gained Form
+
+::: panel-tabset
+## Last 5
+
+```{r}
+#| echo: false
+#| rows.print: 15
+
+performing_above_avg_5 %>%
+  transmute(
+    Player = player_name,
+    `5-Game Average` = avg_score_last_5 %>% round(1),
+    `Overall Average` = avg_score_total %>% round(1),
+    Diff = last_5_vs_ave %>% round(1)
+  )
+
+```
+
+## Last 3
+
+```{r}
+#| echo: false
+#| rows.print: 15
+
+performing_above_avg_3 %>%
+  transmute(
+    Player = player_name,
+    `3-Game Average` = avg_score_last_3 %>% round(1),
+    `Overall Average` = avg_score_total %>% round(1),
+    Diff = last_3_vs_ave %>% round(1)
+  )
+```
+:::
+
+### Lost Form
+
+::: panel-tabset
+## Last 5
+
+```{r}
+#| echo: false
+#| rows.print: 15
+
+
+performing_below_avg_5 %>%
+  transmute(
+    Player = player_name,
+    `5-Game Average` = avg_score_last_5 %>% round(1),
+    `Overall Average` = avg_score_total %>% round(1),
+    Diff = last_5_vs_ave %>% round(1)
+  )
+```
+
+## Last 3
+
+```{r}
+#| echo: false
+#| rows.print: 15
+
+performing_below_avg_3 %>%
+  transmute(
+    Player = player_name,
+    `3-Game Average` = avg_score_last_3 %>% round(1),
+    `Overall Average` = avg_score_total %>% round(1),
+    Diff = last_3_vs_ave %>% round(1)
+  )
+```
+:::

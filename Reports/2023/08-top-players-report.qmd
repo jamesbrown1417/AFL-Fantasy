@@ -1,0 +1,34 @@
+---
+title: "Fantasy Player Performance Report"
+subtitle: "2022 Season"
+format:
+  html:
+      df-print: paged
+      theme: cosmo
+      toc: true
+      self-contained: true
+editor: visual
+author: James Brown
+---
+
+```{r}
+# Libraries and functions
+library(tidyverse)
+library(qreport)
+library(kableExtra)
+
+# Load data processing functions
+source("../../Functions/data_processing_functions.R")
+```
+
+```{r}
+# Get Data
+current_season_data <- get_fantasy_data(season = 2023)
+
+# Top Averages
+current_season_data |> 
+  filter(tog_percentage > 0) |> 
+  select(player_full_name, fantasy_points) |> 
+  summarise(avg_score = mean(fantasy_points), games = n(), .by = player_full_name) |> 
+  arrange(desc(avg_score))
+```

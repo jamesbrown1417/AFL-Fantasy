@@ -61,4 +61,3 @@ get_scoring_history <-
 ```{r}
 get_scoring_history(player_name = "Tom Mitchell", opposition = "Port Adelaide")
 ```
-

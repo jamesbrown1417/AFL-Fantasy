@@ -1,0 +1,13 @@
+---
+title: "Heatmaps"
+subtitle: "2022 Season"
+format:
+  html:
+      theme: cosmo
+      self-contained: true
+      toc: true
+      fig-width: 8
+      fig-height: 6
+editor: visual
+author: James Brown
+---

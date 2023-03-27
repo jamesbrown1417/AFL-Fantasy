@@ -1,0 +1,52 @@
+---
+title: "CBA Changes Report"
+subtitle: "2023 Season"
+format:
+  html:
+      df-print: kable
+      theme: cosmo
+      self-contained: true
+editor: visual
+author: James Brown
+---
+
+```{r}
+# Libraries and functions
+library(tidyverse)
+library(qreport)
+library(kableExtra)
+
+# Load data processing functions
+source("../../Functions/data_processing_functions.R")
+```
+
+```{r}
+# Get Data
+current_season_data <- get_fantasy_data(season = 2023)
+
+# Get only players with at least one CBA
+season_cbas <-
+current_season_data |>
+  select(Player = player_full_name,
+         Round = round,
+         Team = player_team,
+         Opposition = opposition_team,
+         CBAs = cbas,
+         `CBA %` = cba_percentage) |> 
+  mutate(`CBA %` = (100*`CBA %`) |> round(2)) |> 
+  arrange(Player, Round) |> 
+  mutate(`CBA Change` = `CBA %` - lag(`CBA %`), .by = Player) |> 
+  mutate(`Previous Round CBA %` = lag(`CBA %`))
+
+# Get biggest and smallest CBA Changes
+cba_changes <-
+season_cbas |> 
+  select(Player, Team, `CBA %`, `Previous Round CBA %`, `CBA Change`) |> 
+  filter(!is.na(`CBA Change`) & `CBA Change` != 0)
+
+# List of Increases and Decreases
+cba_changes |> arrange(desc(`CBA Change`))
+cba_changes |> arrange(`CBA Change`)
+
+```
+

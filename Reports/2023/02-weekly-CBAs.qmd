@@ -3,7 +3,7 @@ title: "Weekly CBA Report"
 subtitle: "2023 Season"
 format:
   html:
-      df-print: kable
+      df-print: paged
       theme: cosmo
       toc: true
       self-contained: true
@@ -17,6 +17,8 @@ message: false
 ```{r}
 # Libraries and functions
 library(tidyverse)
+library(qreport)
+library(kableExtra)
 
 # Load data processing functions
 source("../../Functions/data_processing_functions.R")
@@ -25,40 +27,63 @@ source("../../Functions/data_processing_functions.R")
 ## CBAs
 
 ```{r}
+#| results: asis
+
 # Get Data
-current_round_data <- get_fantasy_data(season = 2023, round_number = 1)
+current_round_data <- get_fantasy_data(season = 2023, round_number = 2)
 
 # Get only players with at least one CBA
 current_round_cbas <-
 current_round_data |>
-  select(player_full_name, player_team, match_result_string, cbas, cba_percentage) |> 
-  filter(cba_percentage > 0) |> 
-  arrange(player_team, desc(cba_percentage))
+  select(Player = player_full_name,
+         Team = player_team,
+         Opposition = opposition_team,
+         CBAs = cbas,
+         `CBA %` = cba_percentage) |> 
+  filter(`CBA %` > 0) |> 
+  arrange(Team, desc(`CBA %`)) |> 
+  mutate(`CBA %` = (100*`CBA %`) |> round(2))
 
 # Output each team DF
+cba_list <-
 map(
-  unique(current_round_cbas$player_team),
-  ~ current_round_cbas |> filter(player_team == .x)
-)
+  unique(current_round_cbas$Team),
+  ~ current_round_cbas |> filter(Team == .x)
+) |> 
+  set_names(unique(current_round_cbas$Team))
 
+# Make tabset with each team's CBAs
+maketabs(cba_list, wide = FALSE)
 ```
 
 ## Kick-ins
 
 ```{r}
+#| results: asis
+
 # Get only players with at least one kickin
 current_round_kickins <-
 current_round_data |>
-  select(player_full_name, player_team, match_result_string, kick_ins_play_on) |> 
-  filter(kick_ins_play_on > 0) |> 
-  group_by(player_team) |> 
-  mutate(kick_in_percentage = kick_ins_play_on / sum(kick_ins_play_on)) |> 
-  arrange(player_team, desc(kick_in_percentage))
+  select(Player = player_full_name,
+         Team = player_team,
+         Opposition = opposition_team,
+         Kickins = kick_ins,
+         `Kickins (Play On)` = kick_ins_play_on,
+         `Kickin %` = kick_in_percentage) |> 
+  filter(Kickins > 0) |> 
+  group_by(Team) |> 
+  arrange(Team, desc(`Kickin %`)) |> 
+  mutate(`Kickin %` = (100*`Kickin %`) |> round(2))
 
 # Output each team DF
+kickin_list <-
 map(
-  unique(current_round_kickins$player_team),
-  ~ current_round_kickins |> filter(player_team == .x)
-)
+  unique(current_round_kickins$Team),
+  ~ current_round_kickins |> filter(Team == .x)
+) |> 
+  set_names(unique(current_round_kickins$Team))
+
+# Make tabset with each team's Kickins
+maketabs(kickin_list, wide = FALSE)
 
 ```
