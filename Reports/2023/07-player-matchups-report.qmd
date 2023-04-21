@@ -60,7 +60,6 @@ get_scoring_history <-
 ```
 ## Best and Worst Teams to Play
 ```{r}
-#| tbl-column: 20
 
 # Get player positions
 positions <-
