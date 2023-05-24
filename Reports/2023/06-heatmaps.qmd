@@ -54,7 +54,7 @@ map(
   set_names(unique(current_season_cbas$Team))
 ```
 
-## CBA Tables 
+## CBA Tables
 
 ```{r}
 #| results: asis
@@ -67,7 +67,7 @@ get_heatmap <- function(df) {
   df |>
     mutate(Avg = round(mean(`CBA %`, na.rm = TRUE), 2), .by = Player) |>
     select(Player, Round, `CBA %`, Avg) |>
-    mutate(Round = str_remove(Round, "Round ")) |>
+    mutate(Round = as.integer(str_remove(Round, "Round "))) |>
     arrange(Round) |>
     pivot_wider(
       id_cols = c("Player", "Avg"),
@@ -130,7 +130,7 @@ get_heatmap <- function(df) {
   df |>
     mutate(Avg = round(mean(`Kickin %`, na.rm = TRUE), 2), .by = Player) |>
     select(Player, Round, `Kickin %`, Avg) |>
-    mutate(Round = str_remove(Round, "Round ")) |>
+    mutate(Round = as.integer(str_remove(Round, "Round "))) |>
     arrange(Round) |>
     pivot_wider(
       id_cols = c("Player", "Avg"),

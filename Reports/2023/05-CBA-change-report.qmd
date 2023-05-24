@@ -38,8 +38,10 @@ current_season_data |>
          Opposition = opposition_team,
          CBAs = cbas,
          `CBA %` = cba_percentage) |> 
+  mutate(Round = as.integer(str_remove(Round, "Round "))) |>
   mutate(`CBA %` = (100*`CBA %`) |> round(2)) |> 
   arrange(Player, Round) |> 
+  filter(Round %in% c(max(Round), max(Round) - 1)) |> 
   mutate(`CBA Change` = `CBA %` - lag(`CBA %`), .by = Player) |> 
   mutate(`Previous Round CBA %` = lag(`CBA %`))
 
