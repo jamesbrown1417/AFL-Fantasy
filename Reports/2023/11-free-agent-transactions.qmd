@@ -1,0 +1,192 @@
+---
+title: "FA Transactions Summary"
+subtitle: "2023 Season"
+format:
+  html:
+      theme: cosmo
+      df-print: paged
+      self-contained: true
+      toc: true
+      fig-width: 8
+      fig-height: 6
+editor: visual
+author: James Brown
+echo: false
+warning: false
+message: false
+---
+
+![Proudly Sponsored by Up Bank - The Punter's Choice](https://www.finder.com.au/global/images/providers/5d525aa123b50.jpg){fig-alt="You win some. You lose more."}
+
+~You\ win\ some.\ You\ lose\ more.~
+
+```{r}
+# Libraries and functions
+library(tidyverse)
+library(qreport)
+library(kableExtra)
+library(fitzRoy)
+library(rvest)
+library(request)
+
+# Load data processing functions
+source("../../Functions/data_processing_functions.R")
+
+# Get path to FA Transactions
+FA_files <- list.files("../../Data/Free-Agent-Transactions", full.names = TRUE)
+```
+
+```{r}
+# Get URL of data from API
+url = "https://fantasy.afl.com.au/data/afl/players.json?_=1677977794603"
+
+# Get Data from API
+scraped_fantasy_data <-
+  api(url) %>%
+  http()
+
+get_afl_api_player_data <- function(player_data){
+  # Name and price data
+  first_name = player_data$first_name
+  last_name = player_data$last_name
+  id = player_data$id
+  dob = player_data$dob
+  
+  # Return Dataframe with each derived variable as a column
+  tibble(
+    first_name,
+    last_name,
+    id,
+    dob
+  )
+}
+
+afl_player_api_data <-
+  scraped_fantasy_data |> 
+  map(get_afl_api_player_data) |> 
+  reduce(bind_rows) |>
+  mutate(player_full_name = paste(first_name, last_name)) |> 
+  relocate(player_full_name, .after = last_name) |> 
+  select(player_full_name, id, dob)
+
+# Ages
+ages <-
+  afl_player_api_data |> select(player_full_name, dob)
+
+afl_player_api_data <- 
+  afl_player_api_data |> select(-dob)
+```
+
+```{r}
+# Function to read files
+get_FA_data <- function(file) {jsonlite::fromJSON(file, simplifyDataFrame = TRUE)}
+
+# Apply to FA data list
+FA_transactions <- map(FA_files, get_FA_data)
+
+# Get dataframes out
+FA_transactions <- map_dfr(FA_transactions, ~ .x$result)
+```
+
+```{r}
+# Get pickups
+FA_pickups <-
+FA_transactions |> 
+  filter(type == "Add") |> 
+  transmute(round = round_id, date_iso = ymd_hms(date_iso, tz = "UTC"), player_id, team = to) |>
+  mutate(date_iso = with_tz(date_iso, "Australia/Adelaide")) |> 
+  arrange(date_iso) |> 
+  left_join(afl_player_api_data, by = c("player_id" = "id")) |> 
+  relocate(player_full_name, .before = team) |> 
+  rename(timestamp = date_iso) |> 
+  select(-player_id)
+
+# Summarise - total
+# FA_pickups |> 
+#   summarise(total_transactions = n(), .by = team) |> 
+#   arrange(desc(total_transactions))
+```
+
+```{r}
+# Get Fantasy Website Team Rosters
+round_8_json <- jsonlite::fromJSON("../../Data/Fantasy-League-Scores/2023-ROUND-08-SCORES.json", simplifyDataFrame = TRUE)
+
+# Get data from json
+# Defenders
+defenders <-
+  round_8_json$result |>
+  unnest(lineup) |> 
+  unnest(`1`) |> 
+  select(name, firstname, lastname, id = `1`) |> 
+  mutate(position = "Defender") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+midfielders <-
+  round_8_json$result |>
+  unnest(lineup) |> 
+  unnest(`2`) |> 
+  select(name, firstname, lastname, id = `2`) |> 
+  mutate(position = "Midfield") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+rucks <-
+  round_8_json$result |>
+  unnest(lineup) |> 
+  unnest(`3`) |> 
+  select(name, firstname, lastname, id = `3`) |> 
+  mutate(position = "Ruck") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+forwards <-
+  round_8_json$result |>
+  unnest(lineup) |> 
+  unnest(`4`) |> 
+  select(name, firstname, lastname, id = `4`) |> 
+  mutate(position = "Forward") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+bench <-
+  round_8_json$result |>
+  unnest(lineup) |> 
+  unnest(bench) |> 
+  select(name, firstname, lastname, id = bench) |> 
+  mutate(position = "Bench") |> 
+  left_join(afl_player_api_data) |> 
+  select(-id)
+
+rosters <- bind_rows(defenders, midfielders, rucks, forwards, bench)
+```
+
+## FA Activity
+
+```{r}
+# Retention function
+get_retention <- function(team_name) {
+  roster <- rosters |> filter(name == team_name)
+  FA_moves <- FA_pickups |> filter(team == team_name)
+  
+  retained_players <- FA_moves |> filter(player_full_name %in% roster$player_full_name) |> distinct(player_full_name, .keep_all = TRUE)
+  
+  tibble(team = team_name, FA_transactions = nrow(FA_moves), retained_FA_pickups = nrow(retained_players), `Retention %` = retained_FA_pickups / FA_transactions)
+}
+
+# Map to list of team names
+map_dfr(unique(rosters$name), get_retention) |> 
+  mutate(`Retention %` = 100*`Retention %` |> round(3)) |> 
+  arrange(desc(FA_transactions))
+```
+
+## Repeat Pickups
+
+```{r}
+# Repeat pickups
+FA_pickups |> 
+  summarise(n = n(), .by = c(team, player_full_name)) |> 
+  arrange(desc(n)) |> 
+  filter(n > 1)
+  
+```
