@@ -16,7 +16,6 @@ warning: false
 message: false
 ---
 
-
 ```{r}
 # Libraries and functions
 library(tidyverse)
@@ -112,4 +111,3 @@ inside_mid_data |>
   summarise(avg_disposals = mean(disposals), .by = venue) |> 
   arrange(desc(avg_disposals))
 ```
-

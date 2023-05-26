@@ -1,0 +1,121 @@
+---
+title: "Player Performance"
+format:
+  html:
+      theme: cosmo
+      page-layout: full
+      df-print: paged
+      self-contained: true
+      toc: true
+      fig-width: 8
+      fig-height: 6
+editor: visual
+author: James Brown
+echo: false
+warning: false
+message: false
+---
+
+```{r}
+#===============================================================================
+# Libraries and functions
+#===============================================================================
+
+library(tidyverse)
+library(DT)
+library(ggplot2)
+`%notin%` <- Negate(`%in%`)
+
+#===============================================================================
+# Read in data
+#===============================================================================
+
+# Get helper functions
+source("../../Functions/data_processing_functions.r")
+
+# Get data
+data_2023 <- get_fantasy_data(season = 2023)
+afl_fantasy_2014_2022_data <- readRDS("../../Data/afl_fantasy_2014_2022_data.rds")
+
+# Combine
+afl_fantasy_data <-
+  bind_rows(data_2023, afl_fantasy_2014_2022_data) |> 
+  arrange(start_time_utc)
+
+# Make round number an ordered factor
+afl_fantasy_data$round <-
+  factor(
+    afl_fantasy_data$round,
+    levels = c(
+      'Round 1',
+      'Round 2',
+      'Round 3',
+      'Round 4',
+      'Round 5',
+      'Round 6',
+      'Round 7',
+      'Round 8',
+      'Round 9',
+      'Round 10',
+      'Round 11',
+      'Round 12',
+      'Round 13',
+      'Round 14',
+      'Round 15',
+      'Round 16',
+      'Round 17',
+      'Round 18',
+      'Round 19',
+      'Round 20',
+      'Round 21',
+      'Round 22',
+      'Round 23',
+      'Round 24',
+      'Finals Week 1',
+      'Semi Finals',
+      'Preliminary Finals',
+      'Grand Final'
+    ),
+    ordered = TRUE
+  )
+
+```
+
+```{r}
+# Get player history datasets
+player_history <-
+  afl_fantasy_data |>
+  transmute(
+    player_full_name,
+    season = factor(season_name),
+    round,
+    start_time_utc,
+    player_team = factor(player_team),
+    opposition_team = factor(opposition_team),
+    venue = factor(venue),
+    match_result_string,
+    disposals,
+    fantasy_points,
+    tog_percentage
+  ) |> 
+  arrange(player_full_name, desc(start_time_utc))
+
+# Filter to only players who have played in 2023
+player_history_2023 <-
+  player_history |> 
+  filter(player_full_name %in% data_2023$player_full_name)
+
+```
+
+```{r}
+# Display player history
+datatable(
+  player_history_2023 |> select(-start_time_utc),
+  filter = "top",
+  options = list(pageLength = 25, autoWidth = FALSE),
+  rownames = FALSE,
+  colnames = c("Name", "Season", "Round", "Team", "Against", "Venue", "Result", "D", "AF", "TOG"),
+  width = 1080,
+  height = 1920
+)
+```

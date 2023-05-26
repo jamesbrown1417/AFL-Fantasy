@@ -38,6 +38,7 @@ player_history <- dplyr::bind_rows(current_season_data, prev_season_data)
 ```
 
 ## Disposal by team
+
 First, look at which teams give up the most disposals to opposition players
 
 ```{r}
@@ -116,4 +117,3 @@ player_disposals_data_all |>
   mutate(fifteen_plus_disposals = disposals >= 25)
 
 ```
-

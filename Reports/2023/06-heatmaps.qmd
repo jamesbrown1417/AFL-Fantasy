@@ -4,6 +4,7 @@ subtitle: "2022 Season"
 format:
   html:
       theme: cosmo
+      page-layout: full
       self-contained: true
       toc: true
       fig-width: 8
