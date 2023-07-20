@@ -22,7 +22,7 @@ message: false
 #===============================================================================
 
 library(tidyverse)
-library(DT)
+library(qreport)
 library(ggplot2)
 `%notin%` <- Negate(`%in%`)
 
@@ -108,14 +108,223 @@ player_history_2023 <-
 ```
 
 ```{r}
-# Display player history
-datatable(
-  player_history_2023 |> select(-start_time_utc),
-  filter = "top",
-  options = list(pageLength = 25, autoWidth = FALSE),
-  rownames = FALSE,
-  colnames = c("Name", "Season", "Round", "Team", "Against", "Venue", "Result", "D", "AF", "TOG"),
-  width = 1080,
-  height = 1920
+# Full season
+player_averages_2023 <-
+player_history_2023 |>
+filter(season == "2023") |>
+filter(tog_percentage >= 50) |>
+group_by(player_full_name, player_team) |>
+summarise(games = n(), avg_disposals = mean(disposals), avg_fantasy = mean(fantasy_points)) |>
+arrange(desc(avg_fantasy))
+
+# Last 3
+player_averages_last_3 <-
+player_history_2023 |>
+filter(season == "2023") |>
+filter(tog_percentage >= 50) |>
+group_by(player_full_name, player_team) |>
+arrange(desc(round)) |>
+slice_head(n = 3) |>
+summarise(games = n(), avg_disposals_last_3 = mean(disposals), avg_fantasy_last_3 = mean(fantasy_points)) |>
+arrange(desc(avg_fantasy_last_3)) |>
+filter(games == 3) |>
+select(-games)
+
+# Last 5
+player_averages_last_5 <-
+player_history_2023 |>
+filter(season == "2023") |>
+filter(tog_percentage >= 50) |>
+group_by(player_full_name, player_team) |>
+arrange(desc(round)) |>
+slice_head(n = 5) |>
+summarise(games = n(), avg_disposals_last_5 = mean(disposals), avg_fantasy_last_5 = mean(fantasy_points)) |>
+arrange(desc(avg_fantasy_last_5)) |>
+filter(games == 5) |>
+select(-games)
+
+# Last 7
+player_averages_last_7 <-
+player_history_2023 |>
+filter(season == "2023") |>
+filter(tog_percentage >= 50) |>
+group_by(player_full_name, player_team) |>
+arrange(desc(round)) |>
+slice_head(n = 7) |>
+summarise(games = n(), avg_disposals_last_7 = mean(disposals), avg_fantasy_last_7 = mean(fantasy_points)) |>
+arrange(desc(avg_fantasy_last_7)) |>
+filter(games == 7) |>
+select(-games)
+
+# Last 10
+player_averages_last_10 <-
+player_history_2023 |>
+filter(season == "2023") |>
+filter(tog_percentage >= 50) |>
+group_by(player_full_name, player_team) |>
+arrange(desc(round)) |>
+slice_head(n = 10) |>
+summarise(games = n(), avg_disposals_last_10 = mean(disposals), avg_fantasy_last_10 = mean(fantasy_points)) |>
+arrange(desc(avg_fantasy_last_10)) |>
+filter(games == 10) |>
+select(-games)
+```
+
+# Top Players
+
+## Disposals
+
+```{r}
+# Full season
+player_averages_2023 |>
+arrange(desc(avg_disposals)) |>
+select(-avg_fantasy)
+
+# Last 3
+player_averages_last_3 |>
+arrange(desc(avg_disposals_last_3)) |>
+select(-avg_fantasy_last_3)
+```
+
+## Fantasy
+
+```{r}
+
+```
+
+# Performing Above Average Recently
+
+## Disposals
+
+```{r}
+#| results: asis
+# Last 3
+disposals_l3 <-
+player_averages_2023 |>
+left_join(player_averages_last_3) |>
+select(-avg_fantasy, -avg_fantasy_last_3) |>
+mutate(diff = avg_disposals_last_3 - avg_disposals) |>
+arrange(desc(diff))
+
+# Last 5
+disposals_l5 <-
+player_averages_2023 |>
+left_join(player_averages_last_5) |>
+select(-avg_fantasy, -avg_fantasy_last_5) |>
+mutate(diff = avg_disposals_last_5 - avg_disposals) |>
+arrange(desc(diff))
+
+# Last 7
+disposals_l7 <-
+player_averages_2023 |>
+left_join(player_averages_last_7) |>
+select(-avg_fantasy, -avg_fantasy_last_7) |>
+mutate(diff = avg_disposals_last_7 - avg_disposals) |>
+arrange(desc(diff))
+
+# Last 10
+disposals_l10 <-
+player_averages_2023 |>
+left_join(player_averages_last_10) |>
+select(-avg_fantasy, -avg_fantasy_last_10) |>
+mutate(diff = avg_disposals_last_10 - avg_disposals) |>
+arrange(desc(diff))
+
+# Create tabset
+disposals_list <-
+list(
+  "Last 3" = disposals_l3,
+  "Last 5" = disposals_l5,
+  "Last 7" = disposals_l7,
+  "Last 10" = disposals_l10
 )
+
+# Round all numeric columns for each dataframe in the list
+disposals_list <-
+  disposals_list |>
+  map(~ .x |>
+        mutate_if(is.numeric, round, 1))
+
+maketabs(disposals_list, wide = TRUE)
+```
+
+## Fantasy
+
+```{r}
+#| results: asis
+
+# Last 3
+fantasy_l3 <-
+player_averages_2023 |>
+left_join(player_averages_last_3) |>
+select(-avg_disposals, -avg_disposals_last_3) |>
+mutate(diff = avg_fantasy_last_3 - avg_fantasy) |>
+arrange(desc(diff))
+
+# Last 5
+fantasy_l5 <-
+player_averages_2023 |>
+left_join(player_averages_last_5) |>
+select(-avg_disposals, -avg_disposals_last_5) |>
+mutate(diff = avg_fantasy_last_5 - avg_fantasy) |>
+arrange(desc(diff))
+
+# Last 7
+fantasy_l7 <-
+player_averages_2023 |>
+left_join(player_averages_last_7) |>
+select(-avg_disposals, -avg_disposals_last_7) |>
+mutate(diff = avg_fantasy_last_7 - avg_fantasy) |>
+arrange(desc(diff))
+
+# Last 10
+fantasy_l10 <-
+player_averages_2023 |>
+left_join(player_averages_last_10) |>
+select(-avg_disposals, -avg_disposals_last_10) |>
+mutate(diff = avg_fantasy_last_10 - avg_fantasy) |>
+arrange(desc(diff))
+
+# Create tabset
+fantasy_list <-
+list(
+  "Last 3" = fantasy_l3,
+  "Last 5" = fantasy_l5,
+  "Last 7" = fantasy_l7,
+  "Last 10" = fantasy_l10
+)
+
+# Round all numeric columns for each dataframe in the list
+fantasy_list <-
+  fantasy_list |>
+  map(~ .x |>
+        mutate_if(is.numeric, round, 1))
+
+maketabs(fantasy_list, wide = TRUE)
+```
+
+# Players Performing Below Average Recently
+
+## Disposals
+
+```{r}
+#| results: asis
+disposals_list <-
+  disposals_list |>
+  map(~ .x |>
+        arrange((diff)))
+
+maketabs(disposals_list, wide = TRUE)
+```
+
+## Fantasy
+
+```{r}
+#| results: asis
+fantasy_list <-
+  fantasy_list |>
+  map(~ .x |>
+        arrange((diff)))
+
+maketabs(fantasy_list, wide = TRUE)
 ```

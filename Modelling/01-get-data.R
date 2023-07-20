@@ -71,31 +71,3 @@ afl_fantasy_data$round <-
 
 afl_fantasy_data |> 
   write_rds("Modelling/afl_fantasy_data_all.rds")
-
-bailey_dale <-
-afl_fantasy_data |>
-  filter(player_full_name == "Caleb Daniel") |>
-  mutate(home = player_team == home_team) |>
-  select(match_name,
-  start_time = start_time_utc,
-  player_team,
-  opposition_team,
-  home,
-   venue,
-    start_time_utc,
-     season_name,
-      round,
-       temperature,
-        weather_category,
-         player_full_name,
-          fantasy_points,
-           disposals) |>
-           mutate(start_time = start_time + hours(10)) |>
-           mutate(start_time = format(start_time, format = "%H:%M:%S")) |>
-           mutate(day_or_night = ifelse(start_time < "18:00:00", "Day", "Night")) |>
-           mutate(day_or_night = ifelse(venue == "Marvel Stadium", "Under the Roof", day_or_night)) |>
-           mutate(weather_category = ifelse(venue == "Marvel Stadium", "Under the Roof", weather_category)) |>
-           filter(season_name %in% c("2021", "2022", "2023")) |>
-           group_by(day_or_night) |>
-           summarise(games_played = n(), avg_disposals = mean(disposals), avg_fantasy_points = mean(fantasy_points)) |>
-           arrange(desc(avg_disposals))

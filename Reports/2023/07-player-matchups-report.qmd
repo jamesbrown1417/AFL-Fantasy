@@ -102,10 +102,3 @@ map(unique_positions, function(x) by_position |> filter(position == x) |> arrang
   maketabs()
 ```
 
-
-
-<!-- ## Player History -->
-
-<!-- ```{r} -->
-<!-- get_scoring_history(player_name = "Tom Mitchell", opposition = "Port Adelaide") -->
-<!-- ``` -->

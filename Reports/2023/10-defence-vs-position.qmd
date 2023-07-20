@@ -35,20 +35,54 @@ source("../../Functions/data_processing_functions.R")
 # Get Data
 current_season_data <- get_fantasy_data(season = Sys.Date() |> year())
 
-# Get player positions
+# Get player positions from clustering algorithm
 positions <-
-  fitzRoy::fetch_player_details_afl(season = 2023) |> 
-  transmute(player_full_name = str_glue("{firstName} {surname}"),
-            position = str_replace(position, "_", " ")) |> 
-  mutate(position = str_to_title(position))
+ read_rds("../../Data/afl_clustering_positions.rds") |>
+ mutate(round = paste("Round", round)) |>
+ select(player_name, round, position, position_name)
 
 # Join with position data
 current_season_data <-
 current_season_data |> 
-  left_join(positions)
-```
+  left_join(positions, by = c("player_full_name" = "player_name", "round" = "round"))
 
-## DVP Fantasy Points
+# Make round number an ordered factor
+current_season_data$round <-
+  factor(
+    current_season_data$round,
+    levels = c(
+      'Round 1',
+      'Round 2',
+      'Round 3',
+      'Round 4',
+      'Round 5',
+      'Round 6',
+      'Round 7',
+      'Round 8',
+      'Round 9',
+      'Round 10',
+      'Round 11',
+      'Round 12',
+      'Round 13',
+      'Round 14',
+      'Round 15',
+      'Round 16',
+      'Round 17',
+      'Round 18',
+      'Round 19',
+      'Round 20',
+      'Round 21',
+      'Round 22',
+      'Round 23',
+      'Round 24',
+      'Finals Week 1',
+      'Semi Finals',
+      'Preliminary Finals',
+      'Grand Final'
+    ),
+    ordered = TRUE
+  )
+```
 
 ```{r}
 
@@ -58,67 +92,38 @@ current_season_data |>
   distinct(opposition_team) |> 
   pull(opposition_team)
 
-# Get inside midfielder data
-inside_mid_data <-
-current_season_data |> 
-  filter(tog_percentage > 50) |> 
-  filter(mean(cba_percentage) >= 0.45, .by = player_full_name) |> 
-  filter(mean(hitouts) <= 2, .by = player_full_name) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    inside_mid_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    inside_mid_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_inside_mids <-
-map_dfr(team_list, get_dvp) |> 
-  arrange(desc(dvp))
-```
-
-```{r}
-# Get outside midfielder data
-outside_mid_data <-
+# Get list of positions
+position_list <-
 current_season_data |>
-  filter(position == "Midfielder") |> 
-  filter(tog_percentage > 50) |> 
-  filter(mean(hitouts) <= 2, .by = player_full_name) |> 
-  filter(player_full_name %notin% inside_mid_data$player_full_name) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
+  distinct(position_name) |>
+  filter(!is.na(position_name)) |> 
+  pull(position_name)
 
 # Function to get difference between average vs all other teams vs score vs team
-get_dvp_outside_mid <- function(opp_team) {
-  # Avg vs other sides
+get_dvp <- function(opp_team, pos, n_rounds) {
+  
+  # Get last n rounds data
+  rounds_list <-
+  current_season_data |>
+  distinct(round) |>
+  arrange(desc(round)) |>
+  slice_head(n = n_rounds)
+
+  # Get positional dataset
+  data <-
+    current_season_data |>
+    filter(round %in% rounds_list$round) |>
+    filter(position_name == pos)
+  
+  # Avg vs all other sides
   vs_others <-
-    outside_mid_data |>
+    data |>
     filter(opposition_team != opp_team) |>
     summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
   
   # Avg vs side
   vs_team <-
-    outside_mid_data |>
+    data |>
     filter(opposition_team == opp_team) |>
     summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
   
@@ -128,612 +133,156 @@ get_dvp_outside_mid <- function(opp_team) {
   
   # Get dvp score
   score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
+  score = round(score, 2)
+
+  # Get percentage scoring over their avg vs team_list
+  percentage = mean(all_data$avg_vs_team > all_data$avg_vs_others)
+  percentage = round(percentage * 100, 2)
   
-  tibble(opposition_team = opp_team, dvp = score)
+  tibble(opposition_team = opp_team, dvp = score, percentage_over_avg = percentage)
 }
 
-# Apply function to team list
-dvp_outside_mids <-
-map_dfr(team_list, get_dvp_outside_mid) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get Medium forward data
-mid_forward_data <-
-current_season_data |>
-  filter(position == "Midfielder Forward") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_mid_fwd <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    mid_forward_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    mid_forward_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_mid_forwards <-
-map_dfr(team_list, get_dvp_mid_fwd) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get key forward data
-key_forward_data <-
-current_season_data |>
-  filter(position == "Key Forward") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_key_fwd <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    key_forward_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    key_forward_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_key_forwards <-
-map_dfr(team_list, get_dvp_key_fwd) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get Medium forward data
-medium_forward_data <-
-current_season_data |>
-  filter(position == "Medium Forward") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_med_fwd <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    medium_forward_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    medium_forward_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_med_forwards <-
-map_dfr(team_list, get_dvp_med_fwd) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get key defender data
-key_defender_data <-
-current_season_data |>
-  filter(position == "Key Defender") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_key_def <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    key_defender_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    key_defender_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_key_defenders <-
-map_dfr(team_list, get_dvp_key_def) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get medium defender data
-med_defender_data <-
-current_season_data |>
-  filter(position == "Medium Defender") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_med_def <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    med_defender_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    med_defender_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_med_defenders <-
-map_dfr(team_list, get_dvp_med_def) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get rucks data
-ruck_data <-
-current_season_data |>
-  filter(position == "Ruck") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, fantasy_points) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_ruck <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    ruck_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    ruck_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_rucks <-
-map_dfr(team_list, get_dvp_ruck) |> 
-  arrange(desc(dvp))
 ```
 
 ```{r}
-#| results: asis
+# Create df of all combinations
+dvp_data <-
+    expand_grid(opp_team = team_list,
+     pos = position_list,
+      n_rounds = c(5, 10, 15))
 
-# Make list of fantasy DVP
-disposal_dvp <- list("Inside Midfielders" = dvp_inside_mids,
-                     "Outside Midfielders" = dvp_outside_mids,
-                     "Medium Defenders" = dvp_med_defenders,
-                     "Key Defenders" = dvp_key_defenders,
-                     "Rucks" = dvp_rucks,
-                     "Midfielder Forwards" = dvp_mid_forwards,
-                     "Medium Forwards" = dvp_med_forwards,
-                     "Key Forwards" = dvp_key_forwards
-                     )
+# Apply function to each combination of the dataframe columns
+dvp_output <-
+ pmap_df(.l = dvp_data, .f = get_dvp) |>
+ cbind(dvp_data[,-1])
 
-# Make tabset with each team's Kickins
-maketabs(disposal_dvp, wide = TRUE)
+ # Separate into 5, 10, 15 round dataframes----------------
+
+dvp_output_5 <-
+  dvp_output |>
+  filter(n_rounds == 5) |>
+  arrange(desc(dvp))
+
+dvp_output_10 <-
+  dvp_output |>
+  filter(n_rounds == 10) |>
+  arrange(desc(dvp))
+
+dvp_output_15 <-
+  dvp_output |>
+  filter(n_rounds == 15) |>
+  arrange(desc(dvp))
 ```
 
 ## DVP Disposals
 
 ```{r}
-# Get inside midfielder data
-inside_mid_data <-
-current_season_data |> 
-  filter(tog_percentage > 50) |> 
-  filter(mean(cba_percentage) >= 0.45, .by = player_full_name) |> 
-  filter(mean(hitouts) <= 2, .by = player_full_name) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
-
 # Function to get difference between average vs all other teams vs score vs team
-get_dvp <- function(opp_team) {
-  # Avg vs other sides
+get_dvp_disposals <- function(opp_team, pos, n_rounds) {
+  
+  # Get last n rounds data
+  rounds_list <-
+  current_season_data |>
+  distinct(round) |>
+  arrange(desc(round)) |>
+  slice_head(n = n_rounds)
+
+  # Get positional dataset
+  data <-
+    current_season_data |>
+    filter(round %in% rounds_list$round) |>
+    filter(position_name == pos)
+  
+  # Avg vs all other sides
   vs_others <-
-    inside_mid_data |>
+    data |>
     filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
+    summarise(avg_vs_others = mean(disposals, na.rm = TRUE), .by = player_full_name)
   
   # Avg vs side
   vs_team <-
-    inside_mid_data |>
+    data |>
     filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
+    summarise(avg_vs_team = mean(disposals, na.rm = TRUE), .by = player_full_name)
   
   # Join together
   all_data <-
   inner_join(vs_others, vs_team)
   
   # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
+  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
+  score = round(score, 2)
+
+  # Get percentage scoring over their avg vs team_list
+  percentage = mean(all_data$avg_vs_team > all_data$avg_vs_others)
+  percentage = round(percentage * 100, 2)
   
-  tibble(opposition_team = opp_team, dvp = score)
+  tibble(opposition_team = opp_team, dvp = score, percentage_over_avg = percentage)
 }
-
-# Apply function to team list
-dvp_disposals_inside_mids <-
-map_dfr(team_list, get_dvp) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get outside midfielder data
-outside_mid_data <-
-current_season_data |>
-  filter(position == "Midfielder") |> 
-  filter(tog_percentage > 50) |> 
-  filter(mean(hitouts) <= 2, .by = player_full_name) |> 
-  filter(player_full_name %notin% inside_mid_data$player_full_name) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_outside_mid <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    outside_mid_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    outside_mid_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_disposals_outside_mids <-
-map_dfr(team_list, get_dvp_outside_mid) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get key forward data
-key_forward_data <-
-current_season_data |>
-  filter(position == "Key Forward") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_key_fwd <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    key_forward_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    key_forward_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_disposals_key_forwards <-
-map_dfr(team_list, get_dvp_key_fwd) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get medium forward data
-medium_forward_data <-
-current_season_data |>
-  filter(position == "Medium Forward") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_medium_fwd <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    medium_forward_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    medium_forward_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_disposals_medium_forwards <-
-map_dfr(team_list, get_dvp_medium_fwd) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get midfielder forward data
-midfielder_forward_data <-
-current_season_data |>
-  filter(position == "Midfielder Forward") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_mid_fwd <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    midfielder_forward_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    midfielder_forward_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_disposals_midfielder_forwards <-
-map_dfr(team_list, get_dvp_mid_fwd) |> 
-  arrange(desc(dvp))
-```
-
-
-```{r}
-# Get key defender data
-key_defender_data <-
-current_season_data |>
-  filter(position == "Key Defender") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_key_def <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    key_defender_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    key_defender_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
-
-# Apply function to team list
-dvp_disposals_key_defenders <-
-map_dfr(team_list, get_dvp_key_def) |> 
-  arrange(desc(dvp))
 ```
 
 ```{r}
-# Get medium defender data
-medium_defender_data <-
-current_season_data |>
-  filter(position == "Medium Defender") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
+# Apply function to each combination of the dataframe columns
+dvp_output_disposals <-
+ pmap_df(.l = dvp_data, .f = get_dvp_disposals) |>
+ cbind(dvp_data[,-1])
 
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_medium_def <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    medium_defender_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    medium_defender_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
+ # Separate into 5, 10, 15 round dataframes----------------
 
-# Apply function to team list
-dvp_disposals_medium_defenders <-
-map_dfr(team_list, get_dvp_medium_def) |> 
+dvp_output_disposals_5 <-
+  dvp_output_disposals |>
+  filter(n_rounds == 5) |>
+  arrange(desc(dvp))
+
+dvp_output_disposals_10 <-
+  dvp_output_disposals |>
+  filter(n_rounds == 10) |>
+  arrange(desc(dvp))
+
+dvp_output_disposals_15 <-
+  dvp_output_disposals |>
+  filter(n_rounds == 15) |>
   arrange(desc(dvp))
 ```
 
+## Last 10 Rounds
 
 ```{r}
-# Get ruck data
-ruck_data <-
-current_season_data |>
-  filter(position == "Ruck") |> 
-  filter(tog_percentage > 50) |> 
-  select(player_full_name, opposition_team, disposals) |>
-  arrange(player_full_name, opposition_team)
+# Disposals
+pos_list <-
+ map(position_list,
+  ~ dvp_output_disposals_10 |> filter(pos == .x) |>
+  kbl() |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")))
 
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp_ruck <- function(opp_team) {
-  # Avg vs other sides
-  vs_others <-
-    ruck_data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    ruck_data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = median(disposals, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-  inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = median(all_data$avg_vs_team) - median(all_data$avg_vs_others)
-  
-  tibble(opposition_team = opp_team, dvp = score)
-}
+names(pos_list) <- position_list
 
-# Apply function to team list
-dvp_disposals_rucks <-
-map_dfr(team_list, get_dvp_ruck) |> 
-  arrange(desc(dvp))
+# Fantasy
+pos_list_fantasy <-
+ map(position_list,
+  ~ dvp_output_10 |> filter(pos == .x) |>
+  kbl() |>
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")))
+
+names(pos_list_fantasy) <- position_list
 ```
+
+## DVP Disposals
 
 ```{r}
 #| results: asis
+#| rows.print: 18
 
-# Make list of disposal DVP
-disposal_dvp <- list("Inside Midfielders" = dvp_disposals_inside_mids,
-                     "Outside Midfielders" = dvp_disposals_outside_mids,
-                     "Medium Defenders" = dvp_disposals_medium_defenders,
-                     "Key Defenders" = dvp_disposals_key_defenders,
-                     "Rucks" = dvp_disposals_rucks,
-                     "Midfielder Forwards" = dvp_disposals_midfielder_forwards,
-                     "Medium Forwards" = dvp_disposals_medium_forwards,
-                     "Key Forwards" = dvp_disposals_key_forwards
-                     )
-
-# Make tabset with each team's Kickins
-maketabs(disposal_dvp, wide = TRUE)
+# Create tabsets
+maketabs(pos_list, wide = TRUE)
 ```
 
+## DVP Fantasy Points
+
+```{r}
+#| results: asis
+#| rows.print: 18
+
+# Create tabsets
+maketabs(pos_list_fantasy, wide = TRUE)
+```
