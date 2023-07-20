@@ -21,10 +21,29 @@ library(tidyverse)
 # Data
 afl_fantasy_data_all <- read_rds("../afl_fantasy_data_all.rds")
 
+# Make margin variable negative if loss
+afl_fantasy_data_all <-
+  afl_fantasy_data_all |> 
+  mutate(margin = ifelse(player_team == home_team & match_result == "Away Win", -margin, margin)) |> 
+  mutate(margin = ifelse(player_team == away_team & match_result == "Home Win", -margin, margin))
+
+# Create result category variable
+afl_fantasy_data_all$result_category <- cut(
+  afl_fantasy_data_all$margin,
+  breaks = c(-Inf,-40,-1, 0, 39, Inf),
+  labels = c("40+ Loss", "1-39 Loss", "Draw", "1-39 Win", "40+ Win"),
+  right = TRUE,
+  include.lowest = TRUE
+)
+
+afl_fantasy_data_all <-
+  afl_fantasy_data_all |> 
+  relocate(result_category, .after = margin)
+
 # Player history table
 get_player_data <- function(player_name, seasons = NULL) {
   data <-
-  afl_fantasy_data_all |>
+    afl_fantasy_data_all |>
     select(
       player_team,
       home_team,
@@ -36,6 +55,7 @@ get_player_data <- function(player_name, seasons = NULL) {
       temperature,
       weather_category,
       margin,
+      result_category,
       player_full_name,
       goals,
       behinds,
@@ -54,12 +74,12 @@ get_player_data <- function(player_name, seasons = NULL) {
     mutate(day_or_night = ifelse(hour(start_time) >= 18 | hour(start_time) < 6, "Night", "Day")) |>
     mutate(weather_category = ifelse(venue == "Marvel Stadium", "ROOF_CLOSED", weather_category)) |> 
     mutate(weather_category = fct_collapse(weather_category,
-           Clear = c("MOSTLY_SUNNY", "MOSTLY_CLEAR", "SUNNY", "CLEAR_NIGHT"),
-           Overcast = c("OVERCAST"),
-           Rain = c("RAIN", "THUNDERSTORMS"),
-           Windy = c("WINDY"),
-           Indoors = c("ROOF_CLOSED")))
-    
+                                           Clear = c("MOSTLY_SUNNY", "MOSTLY_CLEAR", "SUNNY", "CLEAR_NIGHT"),
+                                           Overcast = c("OVERCAST"),
+                                           Rain = c("RAIN", "THUNDERSTORMS"),
+                                           Windy = c("WINDY"),
+                                           Indoors = c("ROOF_CLOSED")))
+  
   data <- data |> filter(player_full_name == player_name)
   
   if (!is.null(seasons)) {
@@ -85,9 +105,79 @@ player_stat_summary <- function(data, grouping_vars) {
       avg_kicks = mean(kicks) |> round(3),
       avg_handballs = mean(handballs) |> round(3),
       avg_marks = mean(marks) |> round(3),
-      avg_tackles = mean(tackles) |> round(3)
+      avg_tackles = mean(tackles) |> round(3),
+      avg_goals = mean(goals) |> round(3)
     ) |> 
     arrange(desc(avg_fantasy))
+}
+
+# With / without teammate
+with_without <- function(player, teammate, season) {
+  full_data <-
+    afl_fantasy_data_all |>
+    filter(season_name %in% season) |> 
+    filter(tog_percentage >= 50) |> 
+    filter(player_full_name == player | player_full_name == teammate)
+  
+  # Games with both
+  both <-
+    full_data |>
+    group_by(match_name, round, season_name, player_team) |> 
+    filter(n() == 2) |> 
+    ungroup() |> 
+    filter(player_full_name == player) |> 
+    group_by(player_full_name) |> 
+    summarise(
+      games = n(),
+      avg_disposals = mean(disposals) |> round(3),
+      `15+ %` = mean(disposals >= 15) |> round(3),
+      `20+ %` = mean(disposals >= 20) |> round(3),
+      `25+ %` = mean(disposals >= 25) |> round(3),
+      `30+ %` = mean(disposals >= 30) |> round(3),
+      `35+ %` = mean(disposals >= 35) |> round(3),
+      avg_fantasy = mean(fantasy_points) |> round(3),
+      avg_kicks = mean(kicks) |> round(3),
+      avg_handballs = mean(handballs) |> round(3),
+      avg_marks = mean(marks) |> round(3),
+      avg_tackles = mean(tackles) |> round(3),
+      avg_goals = mean(goals) |> round(3)
+    ) |> 
+    arrange(desc(avg_fantasy)) |> 
+    mutate(with_teammate = TRUE,
+           teammate = teammate) |> 
+    relocate(teammate, with_teammate, .after = player_full_name)
+  
+  
+  # Games with just selected player
+  just_player <-
+    full_data |>
+    group_by(match_name, round, season_name, player_team) |> 
+    filter(n() == 1) |> 
+    ungroup() |> 
+    filter(player_full_name == player) |> 
+    group_by(player_full_name) |> 
+    summarise(
+      games = n(),
+      avg_disposals = mean(disposals) |> round(3),
+      `15+ %` = mean(disposals >= 15) |> round(3),
+      `20+ %` = mean(disposals >= 20) |> round(3),
+      `25+ %` = mean(disposals >= 25) |> round(3),
+      `30+ %` = mean(disposals >= 30) |> round(3),
+      `35+ %` = mean(disposals >= 35) |> round(3),
+      avg_fantasy = mean(fantasy_points) |> round(3),
+      avg_kicks = mean(kicks) |> round(3),
+      avg_handballs = mean(handballs) |> round(3),
+      avg_marks = mean(marks) |> round(3),
+      avg_tackles = mean(tackles) |> round(3),
+      avg_goals = mean(goals) |> round(3)
+    ) |> 
+    arrange(desc(avg_fantasy)) |> 
+    mutate(with_teammate = FALSE,
+           teammate = teammate) |> 
+    relocate(teammate, with_teammate, .after = player_full_name)
+  
+  # Return summary
+  bind_rows(just_player, both)
 }
 
 ##%######################################################%##
@@ -114,9 +204,10 @@ ui <- fluidPage(
       checkboxGroupInput(
         "group_vars",
         "Summarise By",
-        choiceNames = c("Venue", "Day / Night", "Home / Away", "Opposition Team", "Weather"),
-        choiceValues = c("venue", "day_or_night", "home_away", "opposition_team", "weather_category")
-      )
+        choiceNames = c("Venue", "Day / Night", "Home / Away", "Opposition Team", "Weather", "Win / Loss"),
+        choiceValues = c("venue", "day_or_night", "home_away", "opposition_team", "weather_category", "result_category")
+      ),
+      textInput("team_mate", "Compare Performance With and Without Teammate"),
     ),
     mainPanel(
       tabsetPanel(
@@ -127,6 +218,10 @@ ui <- fluidPage(
         tabPanel("Player Stats Summary", 
                  h3("Summary"),
                  dataTableOutput("summary_table")
+        ),
+        tabPanel("With and Without Teammate", 
+                 h3("Summary"),
+                 dataTableOutput("with_without_table")
         )
       )
     )
@@ -164,6 +259,10 @@ server <- function(input, output) {
       player_stat_summary(summ_dat, c(input$group_vars))
     }
     
+  })
+  
+  output$with_without_table <- renderDataTable({
+    with_without(input$player_name, input$team_mate, input$season_name)
   })
 }
 
