@@ -175,21 +175,105 @@ select(-games)
 ## Disposals
 
 ```{r}
+#| results: asis
+
 # Full season
+full_season_disposals <-
 player_averages_2023 |>
 arrange(desc(avg_disposals)) |>
 select(-avg_fantasy)
 
 # Last 3
+last_3_disposals <-
 player_averages_last_3 |>
 arrange(desc(avg_disposals_last_3)) |>
 select(-avg_fantasy_last_3)
+
+# Last 5
+last_5_disposals <-
+player_averages_last_5 |>
+arrange(desc(avg_disposals_last_5)) |>
+select(-avg_fantasy_last_5)
+
+# Last 7
+last_7_disposals <-
+player_averages_last_7 |>
+arrange(desc(avg_disposals_last_7)) |>
+select(-avg_fantasy_last_7)
+
+# Last 10
+last_10_disposals <-
+player_averages_last_10 |>
+arrange(desc(avg_disposals_last_10)) |>
+select(-avg_fantasy_last_10)
+
+# Create list and make tabset
+disposals_list <-
+list("Full Season" = full_season_disposals,
+     "Last 3" = last_3_disposals,
+     "Last 5" = last_5_disposals,
+     "Last 7" = last_7_disposals,
+     "Last 10" = last_10_disposals)
+
+# Round all numeric columns for each dataframe in the list
+disposals_list <-
+  disposals_list |>
+  map(~ .x |>
+        mutate_if(is.double, round, 1))
+
+maketabs(disposals_list, wide = TRUE)
 ```
 
 ## Fantasy
 
 ```{r}
+#| results: asis
 
+# Full season
+full_season_fantasy <-
+player_averages_2023 |>
+arrange(desc(avg_fantasy)) |>
+select(-avg_disposals)
+
+# Last 3
+last_3_fantasy <-
+player_averages_last_3 |>
+arrange(desc(avg_fantasy_last_3)) |>
+select(-avg_disposals_last_3)
+
+# Last 5
+last_5_fantasy <-
+player_averages_last_5 |>
+arrange(desc(avg_fantasy_last_5)) |>
+select(-avg_disposals_last_5)
+
+# Last 7
+last_7_fantasy <-
+player_averages_last_7 |>
+arrange(desc(avg_fantasy_last_7)) |>
+select(-avg_disposals_last_7)
+
+# Last 10
+last_10_fantasy <-
+player_averages_last_10 |>
+arrange(desc(avg_fantasy_last_10)) |>
+select(-avg_disposals_last_10)
+
+# Create list and make tabset
+fantasy_list <-
+list("Full Season" = full_season_fantasy,
+     "Last 3" = last_3_fantasy,
+     "Last 5" = last_5_fantasy,
+     "Last 7" = last_7_fantasy,
+     "Last 10" = last_10_fantasy)
+
+# Round all numeric columns for each dataframe in the list
+fantasy_list <-
+  fantasy_list |>
+  map(~ .x |>
+        mutate_if(is.double, round, 1))
+
+maketabs(fantasy_list, wide = TRUE)
 ```
 
 # Performing Above Average Recently
