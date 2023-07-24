@@ -38,7 +38,8 @@ afl_fantasy_data_all$result_category <- cut(
 
 afl_fantasy_data_all <-
   afl_fantasy_data_all |> 
-  relocate(result_category, .after = margin)
+  relocate(result_category, .after = margin) |>
+  mutate(cba_percentage = round(cba_percentage * 100, 1))
 
 # Player history table
 get_player_data <- function(player_name, seasons = NULL) {
@@ -95,18 +96,22 @@ player_stat_summary <- function(data, grouping_vars) {
     group_by(across(all_of(grouping_vars))) |> 
     summarise(
       games = n(),
-      avg_disposals = mean(disposals) |> round(3),
-      `15+ %` = mean(disposals >= 15) |> round(3),
-      `20+ %` = mean(disposals >= 20) |> round(3),
-      `25+ %` = mean(disposals >= 25) |> round(3),
-      `30+ %` = mean(disposals >= 30) |> round(3),
-      `35+ %` = mean(disposals >= 35) |> round(3),
-      avg_fantasy = mean(fantasy_points) |> round(3),
-      avg_kicks = mean(kicks) |> round(3),
-      avg_handballs = mean(handballs) |> round(3),
-      avg_marks = mean(marks) |> round(3),
-      avg_tackles = mean(tackles) |> round(3),
-      avg_goals = mean(goals) |> round(3)
+      avg_disposals = mean(disposals) |> round(1),
+      med_disposals = median(disposals) |> round(1),
+      `15+ %` = mean(disposals >= 15) |> round(1),
+      `20+ %` = mean(disposals >= 20) |> round(1),
+      `25+ %` = mean(disposals >= 25) |> round(1),
+      `30+ %` = mean(disposals >= 30) |> round(1),
+      `35+ %` = mean(disposals >= 35) |> round(1),
+      avg_fantasy = mean(fantasy_points) |> round(1),
+      med_fantasy = median(fantasy_points) |> round(1),
+      avg_kicks = mean(kicks) |> round(1),
+      avg_handballs = mean(handballs) |> round(1),
+      avg_marks = mean(marks) |> round(1),
+      avg_tackles = mean(tackles) |> round(1),
+      avg_goals = mean(goals) |> round(1),
+      `TOG %` = mean(tog_percentage) |> round(1),
+      `CBA %` = mean(cba_percentage) |> round(1)
     ) |> 
     arrange(desc(avg_fantasy))
 }
@@ -129,18 +134,22 @@ with_without <- function(player, teammate, season) {
     group_by(player_full_name) |> 
     summarise(
       games = n(),
-      avg_disposals = mean(disposals) |> round(3),
-      `15+ %` = mean(disposals >= 15) |> round(3),
-      `20+ %` = mean(disposals >= 20) |> round(3),
-      `25+ %` = mean(disposals >= 25) |> round(3),
-      `30+ %` = mean(disposals >= 30) |> round(3),
-      `35+ %` = mean(disposals >= 35) |> round(3),
-      avg_fantasy = mean(fantasy_points) |> round(3),
-      avg_kicks = mean(kicks) |> round(3),
-      avg_handballs = mean(handballs) |> round(3),
-      avg_marks = mean(marks) |> round(3),
-      avg_tackles = mean(tackles) |> round(3),
-      avg_goals = mean(goals) |> round(3)
+      avg_disposals = mean(disposals) |> round(1),
+      med_disposals = median(disposals) |> round(1),
+      `15+ %` = mean(disposals >= 15) |> round(1),
+      `20+ %` = mean(disposals >= 20) |> round(1),
+      `25+ %` = mean(disposals >= 25) |> round(1),
+      `30+ %` = mean(disposals >= 30) |> round(1),
+      `35+ %` = mean(disposals >= 35) |> round(1),
+      avg_fantasy = mean(fantasy_points) |> round(1),
+      med_fantasy = median(fantasy_points) |> round(1),
+      avg_kicks = mean(kicks) |> round(1),
+      avg_handballs = mean(handballs) |> round(1),
+      avg_marks = mean(marks) |> round(1),
+      avg_tackles = mean(tackles) |> round(1),
+      avg_goals = mean(goals) |> round(1),
+      `TOG %` = mean(tog_percentage) |> round(1),
+      `CBA %` = mean(cba_percentage) |> round(1)
     ) |> 
     arrange(desc(avg_fantasy)) |> 
     mutate(with_teammate = TRUE,
@@ -158,18 +167,22 @@ with_without <- function(player, teammate, season) {
     group_by(player_full_name) |> 
     summarise(
       games = n(),
-      avg_disposals = mean(disposals) |> round(3),
-      `15+ %` = mean(disposals >= 15) |> round(3),
-      `20+ %` = mean(disposals >= 20) |> round(3),
-      `25+ %` = mean(disposals >= 25) |> round(3),
-      `30+ %` = mean(disposals >= 30) |> round(3),
-      `35+ %` = mean(disposals >= 35) |> round(3),
-      avg_fantasy = mean(fantasy_points) |> round(3),
-      avg_kicks = mean(kicks) |> round(3),
-      avg_handballs = mean(handballs) |> round(3),
-      avg_marks = mean(marks) |> round(3),
-      avg_tackles = mean(tackles) |> round(3),
-      avg_goals = mean(goals) |> round(3)
+      avg_disposals = mean(disposals) |> round(1),
+      med_disposals = median(disposals) |> round(1),
+      `15+ %` = mean(disposals >= 15) |> round(1),
+      `20+ %` = mean(disposals >= 20) |> round(1),
+      `25+ %` = mean(disposals >= 25) |> round(1),
+      `30+ %` = mean(disposals >= 30) |> round(1),
+      `35+ %` = mean(disposals >= 35) |> round(1),
+      avg_fantasy = mean(fantasy_points) |> round(1),
+      med_fantasy = median(fantasy_points) |> round(1),
+      avg_kicks = mean(kicks) |> round(1),
+      avg_handballs = mean(handballs) |> round(1),
+      avg_marks = mean(marks) |> round(1),
+      avg_tackles = mean(tackles) |> round(1),
+      avg_goals = mean(goals) |> round(1),
+      `TOG %` = mean(tog_percentage) |> round(1),
+      `CBA %` = mean(cba_percentage) |> round(1)
     ) |> 
     arrange(desc(avg_fantasy)) |> 
     mutate(with_teammate = FALSE,

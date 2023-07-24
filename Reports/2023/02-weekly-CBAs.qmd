@@ -19,6 +19,7 @@ message: false
 library(tidyverse)
 library(qreport)
 library(kableExtra)
+library(fitzRoy)
 
 # Load data processing functions
 source("../../Functions/data_processing_functions.R")
@@ -29,8 +30,11 @@ source("../../Functions/data_processing_functions.R")
 ```{r}
 #| results: asis
 
+# Get latest round
+current_round <- fetch_fixture()$compSeason.currentRoundNumber[[1]]
+
 # Get Data
-current_round_data <- get_fantasy_data(season = 2023, round_number = 1)
+current_round_data <- get_fantasy_data(season = 2023, round_number = current_round)
 
 # Get only players with at least one CBA
 current_round_cbas <-

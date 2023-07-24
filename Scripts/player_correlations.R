@@ -8,6 +8,7 @@ library(tidyverse)
 library(tidytable)
 library(stringr)
 library(fitzRoy)
+library(infotheo)
 `%notin%` <- Negate(`%in%`)
 
 source("Functions/data_processing_functions.R")
@@ -36,65 +37,57 @@ player_stats <- bind_rows(afl_fantasy_2014_2022_data, afl_fantasy_2023_data)
 # Create functions to get correlation tables
 #===============================================================================
 
-get_player_correlations <- function(player_a, player_b, line_a, line_b, seasons = 2014:2023) {
-  # Individual DFs
-  a_data <- player_stats |>
-    filter(player_full_name == player_a) |> 
-    select(season_name, round, player_team, player_a_disposals = disposals) |> 
-    mutate(season_name = as.numeric(season_name))
-  
-  b_data <- player_stats |>
-    filter(player_full_name == player_b) |> 
-    select(season_name, round, player_team, player_b_disposals = disposals) |> 
-    mutate(season_name = as.numeric(season_name))
-  
-  # Get games where players played together
-  combined_data <- inner_join(a_data, b_data) |> filter(season_name %in% seasons)
-  
-  # Get games where player A covered line
-  player_a_covered <- combined_data |> filter(player_a_disposals >= line_a)
-  
-  # Get games where player B covered line
-  player_b_covered <- combined_data |> filter(player_b_disposals >= line_b)
-  
-  # Get unconditional probabilities
-  player_a_prob <- mean(combined_data$player_a_disposals >= line_a)
-  player_b_prob <- mean(combined_data$player_b_disposals >= line_b)
-  
-  # Get conditional probabilities
-  player_a_cond_prob <- mean(player_b_covered$player_a_disposals >= line_a)
-  player_b_cond_prob <- mean(player_a_covered$player_b_disposals >= line_b)
-  
-  # Create table
-  table <-
-  tibble(
-    player = c(player_a, player_b),
-    n = nrow(combined_data),
-    disposal_line = c(line_a, line_b),
-    probability = c(player_a_prob, player_b_prob),
-    conditional_probability = c(player_a_cond_prob, player_b_cond_prob)
-  )
-  
-  # Perform a fisher exact test
-  new_dat <-
-    combined_data |> 
-    mutate(player_a_success = player_a_disposals >= line_a,
-           player_b_success = player_b_disposals >= line_b)
-  
-  test <- fisher.test(new_dat$player_a_success, new_dat$player_b_success)
-  
-  # Calculate estimated multi price
-  est_price_1 = 1 / (table[[1, 4]] * table[[2, 5]])
-  est_price_2 = 1 / (table[[2, 4]] * table[[1, 5]])
-  
-  # Add to table
-  table$est_price = 1 / table$probability
-  table$est_multi_price = c(est_price_1, est_price_2)
-  table$p_value = test$p.value
-  
-  # Output
-  table
-}
+get_player_correlations <-
+  function(player_a, player_b, seasons = c("2023")) {
+    # Player A data
+    player_a_data <-
+      player_stats |>
+      filter(season_name %in% seasons) |>
+      filter(player_full_name == player_a) |>
+      filter(tog_percentage >= 60) |>
+      select(
+        player_a_name = player_full_name,
+        match_name,
+        season_name,
+        round,
+        player_team,
+        player_a_fantasy_points = fantasy_points
+      )
+    
+    # Player B data
+    player_b_data <-
+      player_stats |>
+      filter(season_name %in% seasons) |>
+      filter(player_full_name == player_b) |>
+      filter(tog_percentage >= 60) |>
+      select(
+        player_b_name = player_full_name,
+        match_name,
+        season_name,
+        round,
+        player_b_fantasy_points = fantasy_points
+      )
+    
+    # Combine
+    combined_data <-
+      inner_join(player_a_data, player_b_data)
+    
+    # Get correlation between two players
+    player_corr_test <- tryCatch({
+      cor.test(x = combined_data$player_a_fantasy_points,
+               y = combined_data$player_b_fantasy_points)
+    }, error = function(e) {
+      return(list(estimate = NA, conf.int = c(NA, NA), p.value = NA))
+    })
+    
+    tibble(player_a,
+           player_b,
+           games = nrow(combined_data),
+           corr = player_corr_test$estimate,
+           CI_lower = player_corr_test$conf.int[1],
+           CI_upper = player_corr_test$conf.int[2],
+           P = player_corr_test$p.value)
+  }
 
 #===============================================================================
 # Apply function to player combinations
@@ -115,115 +108,19 @@ afl_fantasy_2023_data |>
   distinct(id, .keep_all = TRUE) |> 
   select(player_a = player_full_name.x, player_b = player_full_name.y)
 
-# Get version of function that will handle errors
-corr_fun <- possibly(get_player_correlations, "error")
-
-# Apply function - 15 disposals-------------------------------------------------
-correlation_list_15 <-
-  map2(
-    .x = player_combinations$player_a,
-    .y = player_combinations$player_b,
-    .f = corr_fun,
-    line_a = 15,
-    line_b = 15,
-    seasons = 2021:2023
+# map over all combinations
+all_correlations <-
+  map2_df(
+    player_combinations$player_a,
+    player_combinations$player_b,
+    get_player_correlations
   )
 
-# Remove non df elements
-correlation_list_15 <-
-  correlation_list_15 |> 
-  keep(is.data.frame)
+# Remove instances of too few games
+player_correlation_output <-
+all_correlations |> 
+  filter(games >= 10) |> 
+  arrange(desc(corr))
 
-# extract the minimum value of the "p_value" column from each data frame
-min_values <- map_dbl(correlation_list_15, ~ min(.x$p_value))
-
-# order the list based on the extracted maximum values
-correlation_list_15 <- correlation_list_15[order(min_values, decreasing = FALSE)]
-
-# Apply function - 15 v 20 disposals--------------------------------------------
-correlation_list_15_20 <-
-  map2(
-    .x = player_combinations$player_a,
-    .y = player_combinations$player_b,
-    .f = corr_fun,
-    line_a = 15,
-    line_b = 20,
-    seasons = 2021:2023
-  )
-
-# Remove non df elements
-correlation_list_15_20 <-
-  correlation_list_15_20 |> 
-  keep(is.data.frame)
-
-# extract the minimum value of the "p_value" column from each data frame
-min_values <- map_dbl(correlation_list_15_20, ~ min(.x$p_value))
-
-# order the list based on the extracted maximum values
-correlation_list_15_20 <- correlation_list_15_20[order(min_values, decreasing = FALSE)]
-
-# Apply function - 20 v 15 disposals--------------------------------------------
-correlation_list_20_15 <-
-  map2(
-    .x = player_combinations$player_a,
-    .y = player_combinations$player_b,
-    .f = corr_fun,
-    line_a = 20,
-    line_b = 15,
-    seasons = 2021:2023
-  )
-
-# Remove non df elements
-correlation_list_20_15 <-
-  correlation_list_20_15 |> 
-  keep(is.data.frame)
-
-# extract the minimum value of the "p_value" column from each data frame
-min_values <- map_dbl(correlation_list_20_15, ~ min(.x$p_value))
-
-# order the list based on the extracted maximum values
-correlation_list_20_15 <- correlation_list_20_15[order(min_values, decreasing = FALSE)]
-
-# Apply function - 20 disposals-------------------------------------------------
-correlation_list_20 <-
-  map2(
-    .x = player_combinations$player_a,
-    .y = player_combinations$player_b,
-    .f = corr_fun,
-    line_a = 20,
-    line_b = 20,
-    seasons = 2021:2023
-  )
-
-# Remove non df elements
-correlation_list_20 <-
-  correlation_list_20 |> 
-  keep(is.data.frame)
-
-# extract the minimum value of the "p_value" column from each data frame
-min_values <- map_dbl(correlation_list_20, ~ min(.x$p_value))
-
-# order the list based on the extracted maximum values
-correlation_list_20 <- correlation_list_20[order(min_values, decreasing = FALSE)]
-
-# Apply function - 25 disposals-------------------------------------------------
-correlation_list_25 <-
-  map2(
-    .x = player_combinations$player_a,
-    .y = player_combinations$player_b,
-    .f = corr_fun,
-    line_a = 25,
-    line_b = 25,
-    seasons = 2021:2023
-  )
-
-# Remove non df elements
-correlation_list_25 <-
-  correlation_list_25 |> 
-  keep(is.data.frame)
-
-# extract the minimum value of the "p_value" column from each data frame
-min_values <- map_dbl(correlation_list_25, ~ min(.x$p_value))
-
-# order the list based on the extracted maximum values
-correlation_list_25 <- correlation_list_25[order(min_values, decreasing = FALSE)]
+# Write out to data folder
+write_rds(player_correlation_output, "Data/player_correlations.rds")

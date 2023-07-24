@@ -1,6 +1,6 @@
 ---
-title: "Fantasy Player Performance Report"
-subtitle: "2022 Season"
+title: "Role Changes"
+subtitle: "2023 Season"
 format:
   html:
       df-print: paged
@@ -17,18 +17,61 @@ library(tidyverse)
 library(qreport)
 library(kableExtra)
 
+`%notin%` = base::Negate(`%in%`)
+
 # Load data processing functions
 source("../../Functions/data_processing_functions.R")
+
+# Get 2023 season data
+current_season_data <- get_fantasy_data(season = 2023)
+
+# Get latest round
+latest_round <-
+current_season_data |>
+  arrange(desc(start_time_utc)) |>
+  slice_head(n = 1) |>
+  pull(round)
+
+# Get last round score
+last_round_score <-
+current_season_data |>
+  filter(round %in% latest_round) |> 
+  group_by(player_full_name) |> 
+  summarise(last_round_score = mean(fantasy_points))
+
+# Get season average from all except last game
+season_avg <-
+  current_season_data |>
+  filter(round %notin% latest_round) |> 
+  group_by(player_full_name) |> 
+  summarise(season_avg = mean(fantasy_points))
+
+# Get diff
+last_round_diff <-
+  inner_join(last_round_score, season_avg) |> 
+  mutate(diff = last_round_score - season_avg) |> 
+  arrange(desc(diff))
+
+# Get player position data
+pos_data <- read_rds("../../Data/afl_clustering_positions.rds")
+
 ```
 
 ```{r}
-# Get Data
-current_season_data <- get_fantasy_data(season = 2023)
+# Get last 2 rounds of data
+most_recent_round <-
+  pos_data |> filter(round == max(round)) |> 
+  select(player_full_name = player_name, position_last = position_name)
+  
+two_rounds_ago <- pos_data |> filter(round == max(round) - 1) |> 
+    select(player_full_name = player_name, position_previous = position_name)
 
-# Top Averages
-current_season_data |> 
-  filter(tog_percentage > 0) |> 
-  select(player_full_name, fantasy_points) |> 
-  summarise(avg_score = mean(fantasy_points), games = n(), .by = player_full_name) |> 
-  arrange(desc(avg_score))
+position_change <-
+  inner_join(most_recent_round, two_rounds_ago) |>
+  filter(position_last != position_previous) |>
+  filter(!(position_last == "Key FWD" & position_previous == "Gen FWD")) |> 
+  filter(!(position_last == "Gen FWD" & position_previous == "Key FWD")) |> 
+  left_join(last_round_diff) |> 
+  arrange(desc(diff))
+
 ```
