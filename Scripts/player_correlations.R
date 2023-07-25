@@ -37,6 +37,7 @@ player_stats <- bind_rows(afl_fantasy_2014_2022_data, afl_fantasy_2023_data)
 # Create functions to get correlation tables
 #===============================================================================
 
+# Fantasy Points----------------------------------------------------------------
 get_player_correlations <-
   function(player_a, player_b, seasons = c("2023")) {
     # Player A data
@@ -89,11 +90,64 @@ get_player_correlations <-
            P = player_corr_test$p.value)
   }
 
+# Disposals---------------------------------------------------------------------
+get_player_correlations_disposals <-
+  function(player_a, player_b, seasons = c("2023")) {
+    # Player A data
+    player_a_data <-
+      player_stats |>
+      filter(season_name %in% seasons) |>
+      filter(player_full_name == player_a) |>
+      filter(tog_percentage >= 60) |>
+      select(
+        player_a_name = player_full_name,
+        match_name,
+        season_name,
+        round,
+        player_team,
+        player_a_disposals = disposals
+      )
+    
+    # Player B data
+    player_b_data <-
+      player_stats |>
+      filter(season_name %in% seasons) |>
+      filter(player_full_name == player_b) |>
+      filter(tog_percentage >= 60) |>
+      select(
+        player_b_name = player_full_name,
+        match_name,
+        season_name,
+        round,
+        player_b_disposals = disposals
+      )
+    
+    # Combine
+    combined_data <-
+      inner_join(player_a_data, player_b_data)
+    
+    # Get correlation between two players
+    player_corr_test <- tryCatch({
+      cor.test(x = combined_data$player_a_disposals,
+               y = combined_data$player_b_disposals)
+    }, error = function(e) {
+      return(list(estimate = NA, conf.int = c(NA, NA), p.value = NA))
+    })
+    
+    tibble(player_a,
+           player_b,
+           games = nrow(combined_data),
+           corr = player_corr_test$estimate,
+           CI_lower = player_corr_test$conf.int[1],
+           CI_upper = player_corr_test$conf.int[2],
+           P = player_corr_test$p.value)
+  }
+
 #===============================================================================
-# Apply function to player combinations
+# Apply function to player combinations - Fantasy Points
 #===============================================================================
 
-# Player combinations for this year
+# Player combinations for this year---------------------------------------------
 player_combinations <-
 afl_fantasy_2023_data |>
   distinct(player_full_name, player_team) |>
@@ -122,5 +176,60 @@ all_correlations |>
   filter(games >= 10) |> 
   arrange(desc(corr))
 
-# Write out to data folder
-write_rds(player_correlation_output, "Data/player_correlations.rds")
+# Player combinations for 2021-2023---------------------------------------------
+# map over all combinations
+all_correlations_all <-
+  map2_df(
+    player_combinations$player_a,
+    player_combinations$player_b,
+    get_player_correlations,
+    seasons = c("2021", "2022", "2023")
+  )
+
+# Remove instances of too few games
+player_correlation_output_all <-
+all_correlations_all |> 
+  filter(games >= 25) |> 
+  arrange(desc(corr))
+
+# Write out to data folder------------------------------------------------------
+write_rds(player_correlation_output, "Data/player_correlations_fantasy_23.rds")
+write_rds(player_correlation_output_all, "Data/player_correlations_fantasy_all.rds")
+
+#===============================================================================
+# Apply function to player combinations - Disposals
+#===============================================================================
+
+# map over all combinations
+all_correlations_disposals <-
+  map2_df(
+    player_combinations$player_a,
+    player_combinations$player_b,
+    get_player_correlations_disposals
+  )
+
+# Remove instances of too few games
+player_correlation_output_disposals <-
+all_correlations_disposals |> 
+  filter(games >= 10) |> 
+  arrange(desc(corr))
+
+# Player combinations for 2021-2023---------------------------------------------
+# map over all combinations
+all_correlations_all_disposals <-
+  map2_df(
+    player_combinations$player_a,
+    player_combinations$player_b,
+    get_player_correlations_disposals,
+    seasons = c("2021", "2022", "2023")
+  )
+
+# Remove instances of too few games
+player_correlation_output_all_disposals <-
+all_correlations_all_disposals |> 
+  filter(games >= 25) |> 
+  arrange(desc(corr))
+
+# Write out to data folder------------------------------------------------------
+write_rds(player_correlation_output_disposals, "Data/player_correlations_disposals_23.rds")
+write_rds(player_correlation_output_all_disposals, "Data/player_correlations_disposals_all.rds")

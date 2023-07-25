@@ -68,7 +68,7 @@ get_player_correlations <- function(player_a, player_b, line_a, line_b, type, se
 }
 
 # Function to plot player stats against each other
-plot_corr <- function(player_a, player_b, type, seasons = 2014:2023) {
+plot_corr <- function(player_a, player_b, type, seasons = 2014:2023, a_line, b_line) {
   # Individual DFs
   a_data <- player_stats |>
     filter(player_full_name == player_a) |> 
@@ -88,6 +88,8 @@ plot_corr <- function(player_a, player_b, type, seasons = 2014:2023) {
     ggplot(aes(x = player_a_stat, y = player_b_stat)) +
     geom_jitter(alpha = 0.6, size = 3, color = "darkblue", width = 0.05, height = 0.05) +
     geom_smooth(method = "loess", se = FALSE, linetype = "dashed", color = "red") +
+    geom_vline(xintercept = a_line, linetype = "dashed") +
+    geom_hline(yintercept = b_line, linetype = "dashed") +
     labs(
       x = paste0("Player A (", player_a, ") ", type),
       y = paste0("Player B (", player_b, ") ", type),
@@ -150,7 +152,9 @@ server <- function(input, output) {
       player_a = input$player_a,
       player_b = input$player_b,
       type = input$type,
-      seasons = selected_seasons
+      seasons = selected_seasons,
+      a_line = input$line_a,
+      b_line = input$line_b
     )
   })
 }

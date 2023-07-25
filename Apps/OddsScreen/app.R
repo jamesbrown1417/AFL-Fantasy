@@ -182,6 +182,14 @@ fantasy <-
     left_join(fantasy_dvp_10) |>
     select(-team_1, -team_2, -opposition_team, -player_team)
 
+# Create an average odds column
+disposals <-
+disposals |> 
+  group_by(match, player_name, number_of_disposals) |> 
+  mutate(avg_price = mean(price)) |> 
+  ungroup() |> 
+  mutate(diff_vs_avg = 1/avg_price - 1/price)
+
 # round all numeric columns to 2 decimal places
 disposals <- disposals |> mutate_if(is.numeric, round, digits = 2)
 h2h <- h2h |> mutate_if(is.numeric, round, digits = 2)
@@ -203,7 +211,8 @@ ui <- fluidPage(
                          selectInput("agency", "Select Agency:", choices = unique(disposals$agency), multiple = TRUE),
                          textInput("player_name", "Search Player Name:", value = ""),
                          selectInput("num_disposals", "Select Number of Disposals:", choices = c("10+", "15+", "20+", "25+", "30+", "35+", "40+"), multiple = TRUE),
-                         actionButton("reset_filters_disposals", "Reset Filters")
+                         actionButton("reset_filters_disposals", "Reset Filters"),
+                         checkboxInput("only_best_odds", "Only Show Best Market Odds")
                      ),
                      
                      mainPanel(
@@ -218,7 +227,8 @@ ui <- fluidPage(
                          selectInput("agency_goals", "Select Agency:", choices = unique(goals$agency), multiple = TRUE),
                          textInput("player_name_goals", "Search Player Name:", value = ""),
                          selectInput("num_goals", "Select Number of Goals:", choices = c("1+", "2+", "3+", "4+", "5+", "6+"), multiple = TRUE),
-                         actionButton("reset_filters_goals", "Reset Filters")
+                         actionButton("reset_filters_goals", "Reset Filters"),
+                         checkboxInput("only_best_odds_goals", "Only Show Best Market Odds")
                      ),
                      
                      mainPanel(
@@ -233,7 +243,8 @@ ui <- fluidPage(
                          selectInput("agency_fantasy", "Select Agency:", choices = unique(fantasy$agency), multiple = TRUE),
                          textInput("player_name_fantasy", "Search Player Name:", value = ""),
                          selectInput("fantasy_points", "Select Fantasy Points:", choices = unique(fantasy$fantasy_points), multiple = TRUE),
-                         actionButton("reset_filters_fantasy", "Reset Filters")
+                         actionButton("reset_filters_fantasy", "Reset Filters"),
+                         checkboxInput("only_best_odds_fantasy", "Only Show Best Market Odds")
                      ),
                      
                      mainPanel(
@@ -296,6 +307,10 @@ server <- function(input, output, session) {
             df <- df %>% filter(number_of_disposals %in% input$num_disposals)
         }
         
+        if (input$only_best_odds) {
+          df <- df %>% filter(max_player_diff == diff_2023)
+        }
+        
         return(df)
     })
     
@@ -318,6 +333,10 @@ server <- function(input, output, session) {
         if (!is.null(input$num_goals) &&
             length(input$num_goals) > 0) {
             df <- df %>% filter(number_of_goals %in% input$num_goals)
+        }
+        
+        if (input$only_best_odds_goals) {
+          df <- df %>% filter(max_player_diff == diff_2023)
         }
         
         return(df)
@@ -348,6 +367,10 @@ server <- function(input, output, session) {
         if (!is.null(input$fantasy_points) &&
             length(input$fantasy_points) > 0) {
             df <- df %>% filter(fantasy_points %in% input$fantasy_points)
+        }
+        
+        if (input$only_best_odds_fantasy) {
+          df <- df %>% filter(max_player_diff == diff_2023)
         }
         
         return(df)
