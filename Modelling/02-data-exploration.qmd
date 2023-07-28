@@ -29,347 +29,348 @@ library(scales)
 
 # Read in data
 all_data <- read_rds("afl_fantasy_data_all.rds")
+
 ```
 
-# 1.) - Seasonal Trends
-
-## Fantasy Points
-
 ```{r}
-# Fantasy Points
-fantasy_points_seasonal <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(fantasy_points = if_else(season_name == "2020", fantasy_points / 0.8, fantasy_points)) |> 
-  group_by(season_name, round) |>
-  summarise(
-    round_start_date = min(start_time_utc),
-    players = n(),
-    total_fantasy_points = sum(fantasy_points, na.rm = TRUE),
-    avg_fantasy_points = mean(fantasy_points, na.rm = TRUE),
-    median_fantasy_points = median(fantasy_points, na.rm = TRUE)
+# Get DVP data not including last round
+# Load data processing functions
+source("../Functions/data_processing_functions.R")
+
+# Get Data
+current_season_data <- get_fantasy_data(season = Sys.Date() |> year())
+
+# Get player positions from clustering algorithm
+positions <-
+ read_rds("../Data/afl_clustering_positions.rds") |>
+ mutate(round = paste("Round", round)) |>
+ select(player_name, round, position, position_name)
+
+# Join with position data
+current_season_data <-
+current_season_data |> 
+  left_join(positions, by = c("player_full_name" = "player_name", "round" = "round"))
+
+# Make round number an ordered factor
+current_season_data$round <-
+  factor(
+    current_season_data$round,
+    levels = c(
+      'Round 1',
+      'Round 2',
+      'Round 3',
+      'Round 4',
+      'Round 5',
+      'Round 6',
+      'Round 7',
+      'Round 8',
+      'Round 9',
+      'Round 10',
+      'Round 11',
+      'Round 12',
+      'Round 13',
+      'Round 14',
+      'Round 15',
+      'Round 16',
+      'Round 17',
+      'Round 18',
+      'Round 19',
+      'Round 20',
+      'Round 21',
+      'Round 22',
+      'Round 23',
+      'Round 24',
+      'Finals Week 1',
+      'Semi Finals',
+      'Preliminary Finals',
+      'Grand Final'
+    ),
+    ordered = TRUE
   )
 
-# Create a plot-----------------------------------------------------------------
+# Get dataset as of last week
+test_data <-
+  current_season_data |> 
+  filter(round == max(round))
 
-# Define a color palette
-color_pal <- colorRampPalette(c("#2c7bb6", "#d7191c"))(100)
+training_dataset <-
+  current_season_data |> 
+  filter(round != max(round))
 
-fantasy_points_seasonal |> 
-  ggplot(aes(x = round_start_date, y = median_fantasy_points)) +
-  geom_point(aes(color = median_fantasy_points), size = 3, alpha = 0.6) +
-  geom_smooth(method = "loess", se = F, color = "black", linetype = "dashed") +
-  scale_color_gradientn(colours = color_pal) +
-  labs(title = "Seasonal Trend of Fantasy Points",
-       x = "Start Date of Round",
-       y = "Median Fantasy Points in Round") +
-  theme_minimal() +
-  theme(
-    text = element_text(color = "black"),
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-    panel.grid.major = element_line(linetype = "solid", color = "grey90"),
-    panel.grid.minor = element_blank(),
-    plot.background = element_rect(fill = "white", color = "white"),
-    panel.background = element_rect(fill = "white", color = "white"),
-    legend.position = "bottom"
-  )
+current_season_data <-
+current_season_data |> 
+  filter(round != max(round)) |> 
+  filter(round != max(round))
+
+# Get list of opposition teams
+team_list <-
+current_season_data |>
+  distinct(opposition_team) |> 
+  pull(opposition_team)
+
+# Get list of positions
+position_list <-
+current_season_data |>
+  distinct(position_name) |>
+  filter(!is.na(position_name)) |> 
+  pull(position_name)
+
+# Function to get difference between average vs all other teams vs score vs team
+get_dvp <- function(opp_team, pos, n_rounds) {
+  
+  # Get last n rounds data
+  rounds_list <-
+  current_season_data |>
+  distinct(round) |>
+  arrange(desc(round)) |>
+  slice_head(n = n_rounds)
+
+  # Get positional dataset
+  data <-
+    current_season_data |>
+    filter(round %in% rounds_list$round) |>
+    filter(position_name == pos)
+  
+  # Avg vs all other sides
+  vs_others <-
+    data |>
+    filter(opposition_team != opp_team) |>
+    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
+  
+  # Avg vs side
+  vs_team <-
+    data |>
+    filter(opposition_team == opp_team) |>
+    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
+  
+  # Join together
+  all_data <-
+  inner_join(vs_others, vs_team)
+  
+  # Get dvp score
+  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
+  score = round(score, 2)
+
+  # Get percentage scoring over their avg vs team_list
+  percentage = mean(all_data$avg_vs_team > all_data$avg_vs_others)
+  percentage = round(percentage * 100, 2)
+  
+  tibble(opposition_team = opp_team, dvp = score, percentage_over_avg = percentage)
+}
+
+# Create df of all combinations
+dvp_data <-
+    expand_grid(opp_team = team_list,
+     pos = position_list,
+      n_rounds = c(5, 10, 15))
+
+# Apply function to each combination of the dataframe columns
+dvp_output <-
+ pmap_df(.l = dvp_data, .f = get_dvp) |>
+ cbind(dvp_data[,-1])
+
+# Function to get difference between average vs all other teams vs score vs team
+get_dvp_disposals <- function(opp_team, pos, n_rounds) {
+  
+  # Get last n rounds data
+  rounds_list <-
+  current_season_data |>
+  distinct(round) |>
+  arrange(desc(round)) |>
+  slice_head(n = n_rounds)
+
+  # Get positional dataset
+  data <-
+    current_season_data |>
+    filter(round %in% rounds_list$round) |>
+    filter(position_name == pos)
+  
+  # Avg vs all other sides
+  vs_others <-
+    data |>
+    filter(opposition_team != opp_team) |>
+    summarise(avg_vs_others = mean(disposals, na.rm = TRUE), .by = player_full_name)
+  
+  # Avg vs side
+  vs_team <-
+    data |>
+    filter(opposition_team == opp_team) |>
+    summarise(avg_vs_team = mean(disposals, na.rm = TRUE), .by = player_full_name)
+  
+  # Join together
+  all_data <-
+  inner_join(vs_others, vs_team)
+  
+  # Get dvp score
+  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
+  score = round(score, 2)
+
+  # Get percentage scoring over their avg vs team_list
+  percentage = mean(all_data$avg_vs_team > all_data$avg_vs_others)
+  percentage = round(percentage * 100, 2)
+  
+  tibble(opposition_team = opp_team, dvp = score, percentage_over_avg = percentage)
+}
+
+# Apply function to each combination of the dataframe columns
+dvp_output_disposals <-
+ pmap_df(.l = dvp_data, .f = get_dvp_disposals) |>
+ cbind(dvp_data[,-1])
+
+ #==========================================================#
+ # Combine together
+ #==========================================================#
+
+# Combine
+dvp_output_all <-
+bind_rows(
+    dvp_output_disposals |> mutate(type = "Disposals"),
+    dvp_output |> mutate(type = "Fantasy Points")
+)
 ```
 
-## Disposals
-
 ```{r}
-# Disposals
-disposals_seasonal <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(disposals = if_else(season_name == "2020", disposals / 0.8, disposals)) |> 
-  group_by(season_name, round) |>
-  summarise(
-    round_start_date = min(start_time_utc),
-    players = n(),
-    total_disposals = sum(disposals, na.rm = TRUE),
-    avg_disposals = mean(disposals, na.rm = TRUE),
-    median_disposals = median(disposals, na.rm = TRUE)
-  )
+# Create last 3, 5, 7 and season history data-----------------------------------
+last_3_fantasy <-
+  training_dataset |>
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |>
+  slice(2:4) |> 
+  summarise(avg_last_3 = mean(fantasy_points))
 
-# Create a plot-----------------------------------------------------------------
+last_5_fantasy <-
+  training_dataset |>
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |>
+  slice(2:6) |> 
+  summarise(avg_last_5 = mean(fantasy_points))
 
-disposals_seasonal |> 
-  ggplot(aes(x = round_start_date, y = avg_disposals)) +
-  geom_point(aes(color = avg_disposals), size = 3, alpha = 0.6) +
-  geom_smooth(method = "loess", se = F, color = "black", linetype = "dashed") +
-  scale_color_gradientn(colours = color_pal) +
-  labs(title = "Seasonal Trend of Disposals",
-       x = "Start Date of Round",
-       y = "Mean Disposals in Round") +
-  theme_minimal() +
-  theme(
-    text = element_text(color = "black"),
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-    panel.grid.major = element_line(linetype = "solid", color = "grey90"),
-    panel.grid.minor = element_blank(),
-    plot.background = element_rect(fill = "white", color = "white"),
-    panel.background = element_rect(fill = "white", color = "white"),
-    legend.position = "bottom"
-  )
-```
+last_7_fantasy <-
+  training_dataset |>
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |>
+  slice(2:8) |> 
+  summarise(avg_last_7 = mean(fantasy_points))
 
-## Marks
+season_fantasy <-
+  training_dataset |>
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |>
+  slice(2:nrow(training_dataset)) |> 
+  summarise(season_avg = mean(fantasy_points))
 
-```{r}
-# Marks
-marks_seasonal <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(marks = if_else(season_name == "2020", marks / 0.8, marks)) |> 
-  group_by(season_name, round) |>
-  summarise(
-    round_start_date = min(start_time_utc),
-    players = n(),
-    total_marks = sum(marks, na.rm = TRUE),
-    avg_marks = mean(marks, na.rm = TRUE),
-    median_marks = median(marks, na.rm = TRUE)
-  )
-
-# Create a plot-----------------------------------------------------------------
-
-marks_seasonal |> 
-  ggplot(aes(x = round_start_date, y = avg_marks)) +
-  geom_point(aes(color = avg_marks), size = 3, alpha = 0.6) +
-  geom_smooth(method = "loess", se = F, color = "black", linetype = "dashed") +
-  scale_color_gradientn(colours = color_pal) +
-  labs(title = "Seasonal Trend of Marks",
-       x = "Start Date of Round",
-       y = "Mean Marks in Round") +
-  theme_minimal() +
-  theme(
-    text = element_text(color = "black"),
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-    panel.grid.major = element_line(linetype = "solid", color = "grey90"),
-    panel.grid.minor = element_blank(),
-    plot.background = element_rect(fill = "white", color = "white"),
-    panel.background = element_rect(fill = "white", color = "white"),
-    legend.position = "bottom"
-  )
-```
-
-## Tackles
-
-```{r}
-# Tackles
-tackles_seasonal <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(tackles = if_else(season_name == "2020", tackles / 0.8, tackles)) |> 
-  group_by(season_name, round) |>
-  summarise(
-    round_start_date = min(start_time_utc),
-    players = n(),
-    total_tackles = sum(tackles, na.rm = TRUE),
-    avg_tackles = mean(tackles, na.rm = TRUE),
-    median_tackles = median(tackles, na.rm = TRUE)
-  )
-
-# Create a plot-----------------------------------------------------------------
-
-tackles_seasonal |> 
-  ggplot(aes(x = round_start_date, y = avg_tackles)) +
-  geom_point(aes(color = avg_tackles), size = 3, alpha = 0.6) +
-  geom_smooth(method = "loess", se = F, color = "black", linetype = "dashed") +
-  scale_color_gradientn(colours = color_pal) +
-  labs(title = "Seasonal Trend of Tackles",
-       x = "Start Date of Round",
-       y = "Mean Tackles in Round") +
-  theme_minimal() +
-  theme(
-    text = element_text(color = "black"),
-    plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
-    panel.grid.major = element_line(linetype = "solid", color = "grey90"),
-    panel.grid.minor = element_blank(),
-    plot.background = element_rect(fill = "white", color = "white"),
-    panel.background = element_rect(fill = "white", color = "white"),
-    legend.position = "bottom"
-  )
-```
-
-# 2.) - Weather Trends
-
-## Fantasy Points
-```{r}
-# Fantasy Points - by weather conditions
-fantasy_points_weather <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(fantasy_points = if_else(season_name == "2020", fantasy_points / 0.8, fantasy_points)) |> 
-  group_by(weather_category) |>
-  summarise(
-    players = n(),
-    total_fantasy_points = sum(fantasy_points, na.rm = TRUE),
-    avg_fantasy_points = mean(fantasy_points, na.rm = TRUE),
-    median_fantasy_points = median(fantasy_points, na.rm = TRUE)
-  ) |> 
-  arrange(desc(avg_fantasy_points))
-
-# Plot
-fantasy_points_weather |> 
-  ggplot(aes(x = weather_category, y = avg_fantasy_points)) +
-  geom_col()
-```
-
-## Disposals
-```{r}
-# Disposals - by weather conditions
-disposals_weather <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(disposals = if_else(season_name == "2020", disposals / 0.8, disposals)) |> 
-  group_by(weather_category) |>
-  summarise(
-    players = n(),
-    total_disposals = sum(disposals, na.rm = TRUE),
-    avg_disposals = mean(disposals, na.rm = TRUE),
-    median_disposals = median(disposals, na.rm = TRUE)
-  ) |> 
-  arrange(desc(avg_disposals))
-
-# Plot
-disposals_weather |> 
-  ggplot(aes(x = weather_category, y = avg_disposals)) +
-  geom_col()
-```
-
-## Marks
-```{r}
-# Marks - by weather conditions
-marks_weather <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(marks = if_else(season_name == "2020", marks / 0.8, marks)) |> 
-  group_by(weather_category) |>
-  summarise(
-    players = n(),
-    total_marks = sum(marks, na.rm = TRUE),
-    avg_marks = mean(marks, na.rm = TRUE),
-    median_marks = median(marks, na.rm = TRUE)
-  ) |> 
-  arrange(desc(avg_marks))
-
-# Plot
-marks_weather |> 
-  ggplot(aes(x = weather_category, y = avg_marks)) +
-  geom_col()
-```
-
-## Tackles
-```{r}
-# Tackles - by weather conditions
-tackles_weather <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  mutate(tackles = if_else(season_name == "2020", tackles / 0.8, tackles)) |> 
-  group_by(weather_category) |>
-  summarise(
-    players = n(),
-    total_tackles = sum(tackles, na.rm = TRUE),
-    avg_tackles = mean(tackles, na.rm = TRUE),
-    median_tackles = median(tackles, na.rm = TRUE)
-  ) |> 
-  arrange(desc(avg_tackles))
-
-# Plot
-tackles_weather |> 
-  ggplot(aes(x = weather_category, y = avg_tackles)) +
-  geom_col()
-```
-
-# 3.) - Day vs. Night Trends
-
-# 4.) - Inside Midfielder tackles by weather conditions
-
-```{r}
-# Tackles - by weather conditions
-inside_mid_tackles_weather <-
-  all_data |>
-  filter(tog_percentage > 0) |> 
-  filter(cba_percentage > 0.4) |> 
-  mutate(tackles = if_else(season_name == "2020", tackles / 0.8, tackles)) |> 
-  group_by(weather_category) |>
-  summarise(
-    players = n(),
-    total_tackles = sum(tackles, na.rm = TRUE),
-    avg_tackles = mean(tackles, na.rm = TRUE),
-    median_tackles = median(tackles, na.rm = TRUE)
-  ) |> 
-  arrange(desc(avg_tackles))
-
-# Plot
-tackles_weather |> 
-  ggplot(aes(x = weather_category, y = avg_tackles)) +
-  geom_col()
-```
-
-
-# 5.) - Player Performance by Margin of Win / Loss
-
-## Fantasy Points
-
-```{r}
-fantasy_points_margin <-
-  all_data |>
-  filter(tog_percentage > 0) |>
-  mutate(fantasy_points = if_else(season_name == "2020", fantasy_points / 0.8, fantasy_points)) |>
+# Construct analysis dataset
+training_data <-
+training_dataset |>
+  mutate(home_away = player_team == home_team) |> 
   select(player_full_name,
-         season_name,
          round,
-         match_name,
-         player_team,
-         home_team,
-         away_team,
-         home_team_score,
-         away_team_score,
-         margin,
+         opposition_team,
          fantasy_points) |>
-  mutate(margin = if_else(player_team == home_team & home_team_score < away_team_score, -margin, margin)) |> 
-  mutate(margin = if_else(player_team == away_team & away_team_score < home_team_score, -margin, margin))
+  left_join(last_3_fantasy) |> 
+  left_join(last_5_fantasy) |> 
+  left_join(last_7_fantasy) |> 
+  left_join(season_fantasy)
 
-# Produce Plot
-fantasy_points_margin |> 
-  group_by(season_name, round, player_team) |> 
-  summarise(avg_fantasy_points = mean(fantasy_points, na.rm = TRUE),
-            margin = median(margin)) |> 
-  ggplot(aes(x = margin, y = avg_fantasy_points)) +
-  geom_jitter() +
-  geom_smooth()
+# Add most common position in last 5 games
+# Make round number an ordered factor
+positions$round <-
+  factor(
+    positions$round,
+    levels = c(
+      'Round 1',
+      'Round 2',
+      'Round 3',
+      'Round 4',
+      'Round 5',
+      'Round 6',
+      'Round 7',
+      'Round 8',
+      'Round 9',
+      'Round 10',
+      'Round 11',
+      'Round 12',
+      'Round 13',
+      'Round 14',
+      'Round 15',
+      'Round 16',
+      'Round 17',
+      'Round 18',
+      'Round 19',
+      'Round 20',
+      'Round 21',
+      'Round 22',
+      'Round 23',
+      'Round 24',
+      'Finals Week 1',
+      'Semi Finals',
+      'Preliminary Finals',
+      'Grand Final'
+    ),
+    ordered = TRUE
+  )
+  
+rounds_to_select <- head(unique(positions$round), n = length(unique(positions$round)) - 2)
 
+training_positions <-
+positions |> 
+  filter(round %in% rounds_to_select) |> 
+  arrange(desc(round)) |> 
+  group_by(player_name) |> 
+  slice_head(n = 5) |> 
+  group_by(player_name, position_name) |> 
+  tally() |>
+  arrange(player_name, desc(n)) |> 
+  group_by(player_name) |> 
+  slice_head(n = 1) |> 
+  ungroup() |> 
+  rename(player_full_name = player_name) |> 
+  select(-n)
+  
+training_data <-
+  training_data |> 
+  left_join(training_positions)
+
+# Add DVP last 5, 10 and 15
+dvp_5 <-
+dvp_output |> 
+  filter(n_rounds == 5) |> 
+  select(opposition_team, dvp_5 = dvp, percentage_over_avg_5 = percentage_over_avg, position_name = pos)
+
+dvp_10 <-
+dvp_output |> 
+  filter(n_rounds == 10) |> 
+  select(opposition_team, dvp_10 = dvp, percentage_over_avg_10 = percentage_over_avg, position_name = pos)
+
+dvp_15 <-
+dvp_output |> 
+  filter(n_rounds == 15) |> 
+  select(opposition_team,dvp_15 = dvp, percentage_over_avg_15 = percentage_over_avg, position_name = pos)
+
+# Add to training data
+training_data <-
+training_data |> 
+  left_join(dvp_5) |> 
+  left_join(dvp_10) |> 
+  left_join(dvp_15) |> 
+  filter(round == max(round))
 ```
-
-## Disposals
 
 ```{r}
-disposals_margin <-
-  all_data |>
-  filter(tog_percentage > 0) |>
-  mutate(disposals = if_else(season_name == "2020", disposals / 0.8, disposals)) |>
-  select(player_full_name,
-         season_name,
-         round,
-         match_name,
-         player_team,
-         home_team,
-         away_team,
-         home_team_score,
-         away_team_score,
-         margin,
-         disposals) |>
-  mutate(margin = if_else(player_team == home_team & home_team_score < away_team_score, -margin, margin)) |> 
-  mutate(margin = if_else(player_team == away_team & away_team_score < home_team_score, -margin, margin))
+# Fit models
+fantasy_model <-
+lm(
+  fantasy_points ~
+  avg_last_3 +
+  avg_last_5 +
+  avg_last_7 +
+  season_avg +
+  dvp_10 +
+  percentage_over_avg_10,
+  data = training_data
+)
 
-# Produce Plot
-disposals_margin |> 
-  group_by(season_name, round, player_team) |> 
-  summarise(avg_disposals = mean(disposals, na.rm = TRUE),
-            margin = median(margin)) |> 
-  ggplot(aes(x = margin, y = avg_disposals)) +
-  geom_jitter() +
-  geom_smooth()
+# Summarise model
+summary(fantasy_model)
 ```
+
