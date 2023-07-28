@@ -11,9 +11,9 @@ library(readxl)
 
 
 # Read in data
-disposals <- read_excel("disposals.xlsx")
-fantasy <- read_excel("fantasy.xlsx")
-number_of_games <- read_rds("number_of_games.rds")
+disposals <- read_excel("../disposals.xlsx")
+fantasy <- read_excel("../fantasy.xlsx")
+number_of_games <- read_rds("../number_of_games.rds")
 
 # Unique matches
 matches <-

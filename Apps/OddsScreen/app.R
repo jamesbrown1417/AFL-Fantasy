@@ -65,10 +65,10 @@ player_positions |>
     rename(Pos = position)
 
 # Read in datasets
-disposals <- read_excel("disposals.xlsx")
-h2h <- read_excel("head_to_head.xlsx")
-fantasy <- read_excel("fantasy.xlsx")
-goals <- read_excel("goals.xlsx")
+disposals <- read_excel("../disposals.xlsx")
+h2h <- read_excel("../head_to_head.xlsx")
+fantasy <- read_excel("../fantasy.xlsx")
+goals <- read_excel("../goals.xlsx")
 
 # Get rid of old rounds data
 disposals <- disposals |> filter(start_time > lubridate::today()) |> select(-start_time, -Season, -round)
@@ -100,9 +100,11 @@ names(disposals) <-
         "emp_prob_last_3",
         "emp_prob_last_5",
         "emp_prob_last_7",
+        "emp_prob_last_10",
         "diff_2023",
         "diff_last_5",
         "diff_last_7",
+        "diff_last_10",
         "max_player_diff"
     )
 
