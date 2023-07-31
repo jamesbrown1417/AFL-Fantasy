@@ -4,6 +4,7 @@ library(readxl)
 library(shinythemes)
 library(tidyverse)
 library(DT)
+library(mongolite)
 
 # Get player stats
 player_stats <- readr::read_rds("../afl_fantasy_data_all.rds")
@@ -64,11 +65,18 @@ player_positions |>
     relocate(player_team, .after = player_name) |>
     rename(Pos = position)
 
-# Read in datasets
-disposals <- read_excel("../disposals.xlsx")
-h2h <- read_excel("../head_to_head.xlsx")
-fantasy <- read_excel("../fantasy.xlsx")
-goals <- read_excel("../goals.xlsx")
+# Read in datasets--------------------------------------------------------------
+uri <- Sys.getenv("mongodb_connection_string")
+
+disposals_con <- mongo(collection = "Disposals", db = "Odds", url = uri)
+goals_con <- mongo(collection = "Goals",db = "Odds", url = uri)
+fantasy_con <- mongo(collection = "Fantasy", db = "Odds", url = uri)
+h2h_con <- mongo(collection = "H2H", db = "Odds", url = uri)
+
+disposals <- disposals_con$find('{}') |> tibble()
+goals <- goals_con$find('{}')  |> tibble()
+fantasy <- fantasy_con$find('{}')  |> tibble()
+h2h <- h2h_con$find('{}')  |> tibble()
 
 # Get rid of old rounds data
 disposals <- disposals |> filter(start_time > lubridate::today()) |> select(-start_time, -Season, -round)

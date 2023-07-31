@@ -10,10 +10,12 @@ library(readxl)
 `%notin%` <- Negate(`%in%`)
 
 
-# Read in data
-disposals <- read_excel("../disposals.xlsx")
-fantasy <- read_excel("../fantasy.xlsx")
-number_of_games <- read_rds("../number_of_games.rds")
+# Read in datasets--------------------------------------------------------------
+uri <- Sys.getenv("mongodb_connection_string")
+
+disposals_con <- mongo(collection = "Disposals", db = "Odds", url = uri)
+
+disposals <- disposals_con$find('{}') |> tibble()
 
 # Unique matches
 matches <-
@@ -41,8 +43,7 @@ disposals_display <-
          prob_2023 = round(empirical_probability_2023, 2),
          prob_last_7 = round(empirical_probability_last_7, 2),
          diff_2023 = round(diff_2023, 2),
-         diff_last_7 = round(diff_last_7, 2)) |> 
-  left_join(number_of_games)
+         diff_last_7 = round(diff_last_7, 2))
 
 # Get correlations
 correlations_2023 <-
