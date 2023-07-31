@@ -58,6 +58,9 @@ player_stats <-
 unique_players <-
   player_stats |> 
   filter(season_name == 2023) |> 
+  group_by(player_full_name) |> 
+  filter(n() > 5) |> 
+  ungroup() |> 
   distinct(player_full_name)
 
 # Function to get correlation
@@ -68,7 +71,8 @@ get_margin_corr <- function(player_name) {
     summarise(
       player = max(player_full_name),
       games = n(),
-      correlation = cor(margin, disposals))
+      correlation = cor.test(margin, disposals)$estimate,
+      pvalue = cor.test(margin, disposals)$p.value)
 }
 
 # Map function to unique_players
@@ -89,40 +93,7 @@ plot_margin_corr <- function(player_name) {
     geom_smooth()
 }
 
-plot_margin_corr("Taylor Walker")
-get_margin_corr("Taylor Walker")
-
-# Function to get correlation
-get_margin_corr <- function(player_name) {
-  player_stats |>
-    filter(tog_percentage >= 60) |> 
-    filter(player_full_name == player_name) |> 
-    summarise(
-      player = max(player_full_name),
-      games = n(),
-      correlation = cor(margin, disposals))
-}
-
-# Map function to unique_players
-margin_correlations <-
-  map_dfr(unique_players$player_full_name, get_margin_corr) |>
-  filter(games >= 20) |> 
-  mutate(abs_correlation = abs(correlation)) |> 
-  arrange(desc(abs_correlation)) |> 
-  select(-abs_correlation)
-
-# Function to plot correlation
-plot_margin_corr <- function(player_name) {
-  player_stats |>
-    filter(tog_percentage >= 60) |> 
-    filter(player_full_name == player_name) |> 
-    ggplot(aes(x = margin, y = disposals)) +
-    geom_point() +
-    geom_smooth()
-}
-
-plot_margin_corr("Taylor Walker")
-get_margin_corr("Taylor Walker")
+plot_margin_corr("Jeremy Cameron")
 
 #===============================================================================
 # Functions for fantasy points
@@ -136,7 +107,8 @@ get_margin_corr_fantasy <- function(player_name) {
     summarise(
       player = max(player_full_name),
       games = n(),
-      correlation = cor(margin, fantasy_points))
+      correlation = cor.test(margin, fantasy_points)$estimate,
+      pvalue = cor.test(margin, fantasy_points)$p.value)
 }
 
 # Map function to unique_players
@@ -157,5 +129,4 @@ plot_margin_corr_fantasy <- function(player_name) {
     geom_smooth(method = "lm")
 }
 
-plot_margin_corr_fantasy("Matt Rowell")
-get_margin_corr_fantasy("Matt Rowell")
+

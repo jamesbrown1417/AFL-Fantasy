@@ -24,6 +24,7 @@ message: false
 library(tidyverse)
 library(qreport)
 library(ggplot2)
+library(data.table)
 `%notin%` <- Negate(`%in%`)
 
 #===============================================================================
@@ -36,6 +37,12 @@ source("../../Functions/data_processing_functions.r")
 # Get data
 data_2023 <- get_fantasy_data(season = 2023)
 afl_fantasy_2014_2022_data <- readRDS("../../Data/afl_fantasy_2014_2022_data.rds")
+
+# Adjust for COVID year
+afl_fantasy_2014_2022_data <-
+  afl_fantasy_2014_2022_data |> 
+  mutate(fantasy_points = as.integer(fantasy_points / 0.8),
+         disposals = as.integer(disposals / 0.8))
 
 # Combine
 afl_fantasy_data <-
@@ -412,3 +419,407 @@ fantasy_list <-
 
 maketabs(fantasy_list, wide = TRUE)
 ```
+
+# Streaks - 2023
+
+::: {.panel-tabset}
+
+## 30 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_30 <-
+afl_fantasy_data |> 
+  filter(season_name == "2023") |> 
+  arrange(player_full_name, round) |> 
+  select(match_name, round, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 30
+disposals_streak_30 <- disposals_streak_30 %>%
+  mutate(over_30 = ifelse(disposals >= 30, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_30)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_30[, streak := seq_len(.N), by = .(player_full_name, rleid(over_30))][over_30 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_30 <- as_tibble(disposals_streak_30)
+
+# Get longest active streaks
+longest_30_streaks <-
+disposals_streak_30 |> 
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_30_streaks_any <-
+disposals_streak_30 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(round)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+  
+longest_30_streaks |>
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+## 25 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_25 <-
+afl_fantasy_data |> 
+  filter(season_name == "2023") |> 
+  arrange(player_full_name, round) |> 
+  select(match_name, round, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 25
+disposals_streak_25 <- disposals_streak_25 %>%
+  mutate(over_25 = ifelse(disposals >= 25, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_25)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_25[, streak := seq_len(.N), by = .(player_full_name, rleid(over_25))][over_25 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_25 <- as_tibble(disposals_streak_25)
+
+# Get longest active streaks
+longest_25_streaks <-
+disposals_streak_25 |> 
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_25_streaks_any <-
+disposals_streak_25 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(round)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+
+longest_25_streaks |>
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+## 20 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_20 <-
+afl_fantasy_data |> 
+  filter(season_name == "2023") |> 
+  arrange(player_full_name, round) |> 
+  select(match_name, round, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 20
+disposals_streak_20 <- disposals_streak_20 %>%
+  mutate(over_20 = ifelse(disposals >= 20, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_20)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_20[, streak := seq_len(.N), by = .(player_full_name, rleid(over_20))][over_20 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_20 <- as_tibble(disposals_streak_20)
+
+# Get longest active streaks
+longest_20_streaks <-
+disposals_streak_20 |> 
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |> 
+  mutate(games_played = n()) |> 
+  relocate(games_played, .before = round) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_20_streaks_any <-
+disposals_streak_20 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(round)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+
+longest_20_streaks |>
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+## 15 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_15 <-
+afl_fantasy_data |> 
+  filter(season_name == "2023") |> 
+  arrange(player_full_name, round) |> 
+  select(match_name, round, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 15
+disposals_streak_15 <- disposals_streak_15 %>%
+  mutate(over_15 = ifelse(disposals >= 15, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_15)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_15[, streak := seq_len(.N), by = .(player_full_name, rleid(over_15))][over_15 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_15 <- as_tibble(disposals_streak_15)
+
+# Get longest active streaks
+longest_15_streaks <-
+disposals_streak_15 |> 
+  arrange(player_full_name, desc(round)) |> 
+  group_by(player_full_name) |> 
+  mutate(games_played = n()) |> 
+  relocate(games_played, .before = round) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_15_streaks_any <-
+disposals_streak_15 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(round)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+
+longest_15_streaks |>
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+:::
+
+
+# Streaks - 2014 Onwards
+
+::: {.panel-tabset}
+
+## 30 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_30 <-
+afl_fantasy_data |> 
+  arrange(player_full_name, start_time_utc) |> 
+  select(match_name, season_name, round, start_time_utc, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 30
+disposals_streak_30 <- disposals_streak_30 %>%
+  mutate(over_30 = ifelse(disposals >= 30, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_30)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_30[, streak := seq_len(.N), by = .(player_full_name, rleid(over_30))][over_30 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_30 <- as_tibble(disposals_streak_30)
+
+# Get longest active streaks
+longest_30_streaks <-
+disposals_streak_30 |> 
+  arrange(player_full_name, desc(start_time_utc)) |> 
+  group_by(player_full_name) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_30_streaks_any <-
+disposals_streak_30 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(start_time_utc)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+
+longest_30_streaks |>
+  filter(season_name == "2023") |> 
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+## 25 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_25 <-
+afl_fantasy_data |> 
+  arrange(player_full_name, start_time_utc) |> 
+  select(match_name, season_name, round, start_time_utc, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 25
+disposals_streak_25 <- disposals_streak_25 %>%
+  mutate(over_25 = ifelse(disposals >= 25, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_25)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_25[, streak := seq_len(.N), by = .(player_full_name, rleid(over_25))][over_25 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_25 <- as_tibble(disposals_streak_25)
+
+# Get longest active streaks
+longest_25_streaks <-
+disposals_streak_25 |> 
+  arrange(player_full_name, desc(start_time_utc)) |> 
+  group_by(player_full_name) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_25_streaks_any <-
+disposals_streak_25 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(start_time_utc)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+
+longest_25_streaks |>
+  filter(season_name == "2023") |> 
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+
+## 20 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_20 <-
+afl_fantasy_data |> 
+  arrange(player_full_name, start_time_utc) |> 
+  select(match_name, season_name, round, start_time_utc, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 20
+disposals_streak_20 <- disposals_streak_20 %>%
+  mutate(over_20 = ifelse(disposals >= 20, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_20)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_20[, streak := seq_len(.N), by = .(player_full_name, rleid(over_20))][over_20 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_20 <- as_tibble(disposals_streak_20)
+
+# Get longest active streaks
+longest_20_streaks <-
+disposals_streak_20 |> 
+  arrange(player_full_name, desc(start_time_utc)) |> 
+  group_by(player_full_name) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_20_streaks_any <-
+disposals_streak_20 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(start_time_utc)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+
+# Return
+longest_20_streaks |>
+  filter(season_name == "2023") |> 
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+## 15 Disposals
+
+```{r}
+# Create initial tibble
+disposals_streak_15 <-
+afl_fantasy_data |> 
+  arrange(player_full_name, start_time_utc) |> 
+  select(match_name, season_name, round, start_time_utc, player_full_name, disposals, tog_percentage) |> 
+  filter(tog_percentage >= 50)
+
+# Create a new binary column to mark where disposals >= 15
+disposals_streak_15 <- disposals_streak_15 %>%
+  mutate(over_15 = ifelse(disposals >= 15, 1, 0))
+
+# Convert the data frame to data table
+setDT(disposals_streak_15)
+
+# Create a streak variable using rleid and group by player_full_name
+disposals_streak_15[, streak := seq_len(.N), by = .(player_full_name, rleid(over_15))][over_15 == 0, streak := 0]
+
+# Convert back to tibble if needed
+disposals_streak_15 <- as_tibble(disposals_streak_15)
+
+# Get longest active streaks
+longest_15_streaks <-
+disposals_streak_15 |> 
+  arrange(player_full_name, desc(start_time_utc)) |> 
+  group_by(player_full_name) |> 
+  slice_head(n = 1) |>
+  ungroup() |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak))
+
+# Get longest streak any time
+longest_15_streaks_any <-
+disposals_streak_15 |> 
+  filter(streak > 1) |> 
+  arrange(desc(streak), desc(start_time_utc)) |> 
+  group_by(player_full_name) |>
+  filter(streak == max(streak))
+
+# Return
+longest_15_streaks |>
+  filter(season_name == "2023") |> 
+  select(last_round_played = round,
+         player_full_name,
+         streak)
+```
+
+:::

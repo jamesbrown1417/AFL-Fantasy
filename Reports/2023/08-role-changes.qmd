@@ -9,6 +9,9 @@ format:
       self-contained: true
 editor: visual
 author: James Brown
+echo: false
+warning: false
+message: false
 ---
 
 ```{r}
@@ -71,7 +74,10 @@ position_change <-
   filter(position_last != position_previous) |>
   filter(!(position_last == "Key FWD" & position_previous == "Gen FWD")) |> 
   filter(!(position_last == "Gen FWD" & position_previous == "Key FWD")) |> 
+  filter(!(position_last == "Key DEF" & position_previous == "Gen DEF")) |> 
+  filter(!(position_last == "Gen DEF" & position_previous == "Key DEF")) |> 
   left_join(last_round_diff) |> 
   arrange(desc(diff))
 
+position_change
 ```

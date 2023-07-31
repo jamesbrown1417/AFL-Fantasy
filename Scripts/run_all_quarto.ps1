@@ -7,6 +7,15 @@ Set-Location -Path (Split-Path -Path $scriptPath -Parent)
 # Run the R script to generate the data in apps
 Rscript ".\Apps\01-get-data.R"
 
+# Run position clustering script
+Rscript ".\Modelling\01-get-data.R"
+Rscript ".\Modelling\03-position-clustering.R"
+Rscript ".\Modelling\Predictive-Models\01-get-data.R"
+
+# Run DVP Script
+Rscript ".\Scripts\get_dvp.R"
+Rscript ".\Scripts\player_correlations.R"
+
 # Move to the "Reports" directory
 Set-Location -Path ".\Reports\2023"
 

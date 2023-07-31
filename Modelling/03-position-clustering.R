@@ -164,12 +164,12 @@ cluster_7 <-
 afl_positions.df <-
   afl_positions.df |>
   mutate(position_name = case_when(
-    position == 1 ~ "Inside Mid",
-    position == 2 ~ "Outside Mid",
-    position == 3 ~ "Gen FWD",
-    position == 4 ~ "Ruck",
-    position == 5 ~ "Gen DEF",
-    position == 6 ~ "Key FWD",
+    position == 1 ~ "Key FWD",
+    position == 2 ~ "Inside Mid",
+    position == 3 ~ "Ruck",
+    position == 4 ~ "Outside Mid",
+    position == 5 ~ "Key DEF",
+    position == 6 ~ "Gen FWD",
     position == 7 ~ "Gen DEF"
   ))
 
