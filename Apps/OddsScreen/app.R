@@ -131,6 +131,12 @@ disposals <-
          emp_prob_last_7 = empirical_probability_last_7,
          emp_prob_last_10 = empirical_probability_last_10)
 
+# Relocate
+disposals <-
+  disposals |> 
+  relocate(emp_prob_last_7, emp_prob_last_10, .after = emp_prob_last_5) |>
+  relocate(diff_last_7, diff_last_10, .after = diff_last_5)
+
 # Get all pairwise h2h comparisons
 home_h2h <-
     h2h |>
