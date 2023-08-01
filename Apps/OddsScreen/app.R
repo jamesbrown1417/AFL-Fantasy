@@ -6,6 +6,33 @@ library(tidyverse)
 library(DT)
 library(mongolite)
 
+# Kelly criterion function------------------------------------------------------
+
+kelly_criterion <- function(probability, odds, bankroll, half = TRUE) {
+  # Calculate the edge and the odds ratio
+  edge <- probability * odds - 1
+  odds_ratio <- odds - 1
+  
+  # If the edge is less than 0, return 0 (i.e., do not bet)
+  if (edge <= 0) {
+    return(0)
+  }
+  
+  # Calculate the full Kelly fraction
+  kelly_fraction <- edge / odds_ratio
+  
+  # If half is TRUE, bet only half of the Kelly fraction
+  if(half) {
+    kelly_fraction <- kelly_fraction / 2
+  }
+  
+  # Calculate the bet amount
+  bet_amount <- kelly_fraction * bankroll
+  
+  # Return the bet amount
+  return(bet_amount)
+}
+
 # Get player stats
 player_stats <- readr::read_rds("../afl_fantasy_data_all.rds")
 
@@ -94,27 +121,15 @@ get_historical_performance <- function(player_name, stat, line, n) {
 }
 
 # Rename variables
-names(disposals) <-
-    c(
-        "match",
-        "player_name",
-        "number_of_disposals",
-        "price",
-        "agency",
-        "gmd",
-        "implied_prob",
-        "emp_prob_2022",
-        "emp_prob_2023",
-        "emp_prob_last_3",
-        "emp_prob_last_5",
-        "emp_prob_last_7",
-        "emp_prob_last_10",
-        "diff_2023",
-        "diff_last_5",
-        "diff_last_7",
-        "diff_last_10",
-        "max_player_diff"
-    )
+disposals <-
+  disposals |> 
+  rename(implied_prob = implied_probability,
+         emp_prob_2022 = empirical_probability_2022,
+         emp_prob_2023 = empirical_probability_2023,
+         emp_prob_last_3 = empirical_probability_last_3,
+         emp_prob_last_5 = empirical_probability_last_5,
+         emp_prob_last_7 = empirical_probability_last_7,
+         emp_prob_last_10 = empirical_probability_last_10)
 
 # Get all pairwise h2h comparisons
 home_h2h <-
@@ -209,88 +224,183 @@ goals <- goals |> distinct(match, player_name, number_of_goals, price, agency, .
 
 # Define UI for the application
 ui <- fluidPage(
-    theme = shinytheme("flatly"),
-    
-    titlePanel("Odds Screen"),
-    
-    tabsetPanel(
-        tabPanel("Disposals",
-                 sidebarLayout(
-                     sidebarPanel(
-                         selectInput("match", "Select Match:", choices = unique(disposals$match), multiple = TRUE),
-                         selectInput("agency", "Select Agency:", choices = unique(disposals$agency), multiple = TRUE),
-                         textInput("player_name", "Search Player Name:", value = ""),
-                         selectInput("num_disposals", "Select Number of Disposals:", choices = c("10+", "15+", "20+", "25+", "30+", "35+", "40+"), multiple = TRUE),
-                         actionButton("reset_filters_disposals", "Reset Filters"),
-                         checkboxInput("only_best_odds", "Only Show Best Market Odds")
-                     ),
-                     
-                     mainPanel(
-                         DTOutput("disposals_table")
-                     )
-                 )
+  theme = shinytheme("flatly"),
+  
+  titlePanel("Odds Screen"),
+  
+  tabsetPanel(
+    tabPanel(
+      "Disposals",
+      sidebarLayout(
+        sidebarPanel(
+          selectInput(
+            "match",
+            "Select Match:",
+            choices = unique(disposals$match),
+            multiple = TRUE
+          ),
+          selectInput(
+            "agency",
+            "Select Agency:",
+            choices = unique(disposals$agency),
+            multiple = TRUE
+          ),
+          textInput("player_name", "Search Player Name:", value = ""),
+          selectInput(
+            "num_disposals",
+            "Select Number of Disposals:",
+            choices = c("10+", "15+", "20+", "25+", "30+", "35+", "40+"),
+            multiple = TRUE
+          ),
+          actionButton("reset_filters_disposals", "Reset Filters"),
+          sliderInput(
+            "diff_23_slider_disposals",
+            label = "Select Season Differences:",
+            min = min(disposals$diff_2023, na.rm = TRUE),
+            max = max(disposals$diff_2023, na.rm = TRUE),
+            dragRange = TRUE,
+            value = c(min(disposals$diff_2023, na.rm = TRUE), max(disposals$diff_2023, na.rm = TRUE))
+          ),
+        sliderInput(
+          "diff_last_10_slider_disposals",
+          label = "Select Last 10 Game Differences:",
+          min = min(disposals$diff_last_10, na.rm = TRUE),
+          max = max(disposals$diff_last_10, na.rm = TRUE),
+          dragRange = TRUE,
+          value = c(min(disposals$diff_last_10, na.rm = TRUE), max(disposals$diff_last_10, na.rm = TRUE))
         ),
-        tabPanel("Goals",
-                 sidebarLayout(
-                     sidebarPanel(
-                         selectInput("match_goals", "Select Match:", choices = unique(goals$match), multiple = TRUE),
-                         selectInput("agency_goals", "Select Agency:", choices = unique(goals$agency), multiple = TRUE),
-                         textInput("player_name_goals", "Search Player Name:", value = ""),
-                         selectInput("num_goals", "Select Number of Goals:", choices = c("1+", "2+", "3+", "4+", "5+", "6+"), multiple = TRUE),
-                         actionButton("reset_filters_goals", "Reset Filters"),
-                         checkboxInput("only_best_odds_goals", "Only Show Best Market Odds")
-                     ),
-                     
-                     mainPanel(
-                         DTOutput("goals_table")
-                     )
-                 )
-        ),
-        tabPanel("Fantasy",
-                 sidebarLayout(
-                     sidebarPanel(
-                         selectInput("match_fantasy", "Select Match:", choices = unique(fantasy$match), multiple = TRUE),
-                         selectInput("agency_fantasy", "Select Agency:", choices = unique(fantasy$agency), multiple = TRUE),
-                         textInput("player_name_fantasy", "Search Player Name:", value = ""),
-                         selectInput("fantasy_points", "Select Fantasy Points:", choices = unique(fantasy$fantasy_points), multiple = TRUE),
-                         actionButton("reset_filters_fantasy", "Reset Filters"),
-                         checkboxInput("only_best_odds_fantasy", "Only Show Best Market Odds")
-                     ),
-                     
-                     mainPanel(
-                         DTOutput("fantasy_table")
-                     )
-                 )
-        ),
-        tabPanel("Head-to-Head",
-                 sidebarLayout(
-                     sidebarPanel(
-                         selectInput("round_h2h", "Select Round:", choices = unique(h2h$round), multiple = TRUE),
-                         selectInput("match_h2h", "Select Match:", choices = unique(h2h$match), multiple = TRUE),
-                         selectInput("home_agency_h2h", "Select Home Agency:", choices = unique(h2h$home_agency), multiple = TRUE),
-                         selectInput("away_agency_h2h", "Select Away Agency:", choices = unique(h2h$away_agency), multiple = TRUE),
-                         actionButton("reset_filters_h2h", "Reset Filters")
-                     ),
-                     
-                     mainPanel(
-                         DTOutput("h2h_table")
-                     )
-                 )
-        ),
-        tabPanel("Player History",
-                 sidebarLayout(
-                     sidebarPanel(
-                         textInput(inputId = "player_name_history", label = "Player Name"),
-                         numericInput(inputId = "n_games", label = "Number of Games", value = 5, step = 1),
-                         actionButton("reset_filters_player_history", "Reset Filters")
-                     ),
-                     
-                     mainPanel(
-                         DTOutput("player_history_table")
-                     )
-                 )
-        )
-    )
+      sliderInput(
+        "diff_last_7_slider_disposals",
+        label = "Select Last 7 Game Differences:",
+        min = min(disposals$diff_last_7, na.rm = TRUE),
+        max = max(disposals$diff_last_7, na.rm = TRUE),
+        dragRange = TRUE,
+        value = c(min(disposals$diff_last_7, na.rm = TRUE), max(disposals$diff_last_7, na.rm = TRUE))
+      ),
+    sliderInput(
+      "diff_last_5_slider_disposals",
+      label = "Select Last 5 Game Differences:",
+      min = min(disposals$diff_last_5, na.rm = TRUE),
+      max = max(disposals$diff_last_5, na.rm = TRUE),
+      dragRange = TRUE,
+      value = c(min(disposals$diff_last_5, na.rm = TRUE), max(disposals$diff_last_5, na.rm = TRUE))
+    ),
+    numericInput(
+      "disposals_price",
+      label = "Select Max Price:",
+      min = min(disposals$price, na.rm = TRUE),
+      max = max(disposals$price, na.rm = TRUE),
+      step = 0.01, 
+      value = max(disposals$price, na.rm = TRUE)
+    ),
+    checkboxInput("only_best_odds", "Only Show Best Market Odds")
+  ),
+  mainPanel(DTOutput("disposals_table"))
+)),
+tabPanel("Goals",
+         sidebarLayout(
+           sidebarPanel(
+             selectInput(
+               "match_goals",
+               "Select Match:",
+               choices = unique(goals$match),
+               multiple = TRUE
+             ),
+             selectInput(
+               "agency_goals",
+               "Select Agency:",
+               choices = unique(goals$agency),
+               multiple = TRUE
+             ),
+             textInput("player_name_goals", "Search Player Name:", value = ""),
+             selectInput(
+               "num_goals",
+               "Select Number of Goals:",
+               choices = c("1+", "2+", "3+", "4+", "5+", "6+"),
+               multiple = TRUE
+             ),
+             actionButton("reset_filters_goals", "Reset Filters"),
+             checkboxInput("only_best_odds_goals", "Only Show Best Market Odds")
+           ),
+           
+           mainPanel(DTOutput("goals_table"))
+         )),
+tabPanel("Fantasy",
+         sidebarLayout(
+           sidebarPanel(
+             selectInput(
+               "match_fantasy",
+               "Select Match:",
+               choices = unique(fantasy$match),
+               multiple = TRUE
+             ),
+             selectInput(
+               "agency_fantasy",
+               "Select Agency:",
+               choices = unique(fantasy$agency),
+               multiple = TRUE
+             ),
+             textInput("player_name_fantasy", "Search Player Name:", value = ""),
+             selectInput(
+               "fantasy_points",
+               "Select Fantasy Points:",
+               choices = unique(fantasy$fantasy_points),
+               multiple = TRUE
+             ),
+             actionButton("reset_filters_fantasy", "Reset Filters"),
+             checkboxInput("only_best_odds_fantasy", "Only Show Best Market Odds")
+           ),
+           
+           mainPanel(DTOutput("fantasy_table"))
+         )),
+tabPanel("Head-to-Head",
+         sidebarLayout(
+           sidebarPanel(
+             selectInput(
+               "round_h2h",
+               "Select Round:",
+               choices = unique(h2h$round),
+               multiple = TRUE
+             ),
+             selectInput(
+               "match_h2h",
+               "Select Match:",
+               choices = unique(h2h$match),
+               multiple = TRUE
+             ),
+             selectInput(
+               "home_agency_h2h",
+               "Select Home Agency:",
+               choices = unique(h2h$home_agency),
+               multiple = TRUE
+             ),
+             selectInput(
+               "away_agency_h2h",
+               "Select Away Agency:",
+               choices = unique(h2h$away_agency),
+               multiple = TRUE
+             ),
+             actionButton("reset_filters_h2h", "Reset Filters")
+           ),
+           
+           mainPanel(DTOutput("h2h_table"))
+         )),
+tabPanel("Player History",
+         sidebarLayout(
+           sidebarPanel(
+             textInput(inputId = "player_name_history", label = "Player Name"),
+             numericInput(
+               inputId = "n_games",
+               label = "Number of Games",
+               value = 5,
+               step = 1
+             ),
+             actionButton("reset_filters_player_history", "Reset Filters")
+           ),
+           
+           mainPanel(DTOutput("player_history_table"))
+         ))
+)
 )
 
 
@@ -320,6 +430,15 @@ server <- function(input, output, session) {
         if (input$only_best_odds) {
           df <- df %>% filter(max_player_diff == diff_2023)
         }
+        
+        df <-
+          df |>
+          filter(diff_2023 >= input$diff_23_slider_disposals[1] & diff_2023 <= input$diff_23_slider_disposals[2]) |> 
+          filter(diff_last_10 >= input$diff_last_10_slider_disposals[1] & diff_last_10 <= input$diff_last_10_slider_disposals[2]) |> 
+          filter(diff_last_7 >= input$diff_last_7_slider_disposals[1] & diff_last_7 <= input$diff_last_7_slider_disposals[2]) |> 
+          filter(diff_last_5 >= input$diff_last_5_slider_disposals[1] & diff_last_5 <= input$diff_last_5_slider_disposals[2]) |>
+          filter(price <= input$disposals_price)
+          
         
         return(df)
     })

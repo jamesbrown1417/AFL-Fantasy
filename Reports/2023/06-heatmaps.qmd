@@ -103,8 +103,8 @@ current_season_data |>
          Opposition = opposition_team,
          Round = round,
          Kickins = kick_ins,
-         `Kickins (Play On)` = kick_ins_play_on,
-         `Kickin %` = kick_in_percentage) |> 
+         `Kickins (Play On)` = kick_ins_play_on) |>
+  mutate(`Kickin %` = Kickins / sum(Kickins), .by = c("Team", "Opposition", "Round")) |> 
   filter(Kickins > 0) |> 
   group_by(Team) |> 
   arrange(Team, desc(`Kickin %`)) |> 

@@ -422,8 +422,7 @@ maketabs(fantasy_list, wide = TRUE)
 
 # Streaks - 2023
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ## 30 Disposals
 
 ```{r}
@@ -619,14 +618,11 @@ longest_15_streaks |>
          player_full_name,
          streak)
 ```
-
 :::
-
 
 # Streaks - 2014 Onwards
 
-::: {.panel-tabset}
-
+::: panel-tabset
 ## 30 Disposals
 
 ```{r}
@@ -722,7 +718,6 @@ longest_25_streaks |>
          player_full_name,
          streak)
 ```
-
 
 ## 20 Disposals
 
@@ -821,5 +816,4 @@ longest_15_streaks |>
          player_full_name,
          streak)
 ```
-
 :::
