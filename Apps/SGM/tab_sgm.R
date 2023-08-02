@@ -3,6 +3,7 @@ library(jsonlite)
 library(dplyr)
 library(purrr)
 library(mongolite)
+uri <- Sys.getenv("mongodb_connection_string")
 
 # TAB SGM-----------------------------------------------------------------------
 tabsgm_con <- mongo(collection = "TAB-SGM", db = "Odds", url = uri)

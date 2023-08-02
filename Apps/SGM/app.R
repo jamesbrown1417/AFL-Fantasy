@@ -8,33 +8,52 @@ library(shinythemes)
 library(DT)
 library(readxl)
 library(mongolite)
-library(reticulate)
 `%notin%` <- Negate(`%in%`)
 
-# Import python script
-py_script <- import("master_sgm")
+#===============================================================================
+# Create compare sgm function
+#===============================================================================
+
+# Source scripts
+source("betright_sgm.R")
+source("tab_sgm.R")
+source("sportsbet_sgm.R")
+source("pointsbet_sgm.R")
+source("palmerbet_sgm.R")
+
+# Create compare sgm function
+compare_sgm <- function(player_names, disposal_counts) {
+  # Function to handle errors in the call_sgm functions
+  handle_call_sgm <- function(func, sgm, player_names, disposal_counts) {
+    tryCatch({
+      func(sgm, player_names, disposal_counts)
+    }, error = function(e) {
+      # Return a dataframe with NA values if an error occurs
+      data.frame(Selections=NA, Unadjusted_Price=NA, Adjusted_Price=NA, Adjustment_Factor=NA, Agency=NA)
+    })
+  }
+  
+  # Get individual dataframes
+  pointsbet_data <- handle_call_sgm(call_sgm_pointsbet, pointsbet_sgm, player_names, disposal_counts)
+  sportsbet_data <- handle_call_sgm(call_sgm_sportsbet, sportsbet_sgm, player_names, disposal_counts)
+  tab_data <- handle_call_sgm(call_sgm_tab, tab_sgm, player_names, disposal_counts)
+  betright_data <- handle_call_sgm(call_sgm_betright, betright_sgm, player_names, disposal_counts)
+  palmerbet_data <- handle_call_sgm(call_sgm_palmerbet, palmerbet_sgm, player_names, disposal_counts)
+  
+  # Bind together and return
+  bind_rows(pointsbet_data, sportsbet_data, tab_data, betright_data, palmerbet_data) |>
+    mutate(Adjusted_Price = round(Adjusted_Price, 2),
+           Unadjusted_Price = round(Unadjusted_Price, 2),
+           Adjustment_Factor = round(Adjustment_Factor, 2)
+           ) |>
+    arrange(desc(Adjusted_Price))
+}
 
 # Read in datasets--------------------------------------------------------------
 uri <- Sys.getenv("mongodb_connection_string")
 
 disposals_con <- mongo(collection = "Disposals", db = "Odds", url = uri)
 disposals <- disposals_con$find('{}') |> tibble()
-
-# TAB SGM-----------------------------------------------------------------------
-tabsgm_con <- mongo(collection = "TAB-SGM", db = "Odds", url = uri)
-tab_sgm <- tabsgm_con$find('{}') |> tibble()
-
-# BetRight SGM------------------------------------------------------------------
-betrightsgm_con <- mongo(collection = "BetRight-SGM", db = "Odds", url = uri)
-betright_sgm <- betrightsgm_con$find('{}') |> tibble()
-
-# Sportsbet SGM-----------------------------------------------------------------
-sbsgm_con <- mongo(collection = "Sportsbet-SGM", db = "Odds", url = uri)
-sportsbet_sgm <- sbsgm_con$find('{}') |> tibble()
-
-# Pointsbet SGM-----------------------------------------------------------------
-pbsgm_con <- mongo(collection = "Pointsbet-SGM", db = "Odds", url = uri)
-pointsbet_sgm <- pbsgm_con$find('{}') |> tibble()
 
 # Unique matches
 matches <-
@@ -137,11 +156,11 @@ server <- function(input, output, session) {
     number_of_disposals = selected_data$number_of_disposals
     
     # Call function
-    py_script$compare_sgm(player_names, number_of_disposals)
+    comparison_df <- compare_sgm(player_names, number_of_disposals)
     
     # populate DTOutput
     output$odds_compare <- renderDT({
-      datatable(a)
+      datatable(comparison_df)
     })
   })
 
