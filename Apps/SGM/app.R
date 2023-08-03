@@ -79,9 +79,9 @@ disposals_display <-
          price,
          agency,
          prob_2023 = round(empirical_probability_2023, 2),
-         prob_last_7 = round(empirical_probability_last_7, 2),
+         prob_last_10 = round(empirical_probability_last_10, 2),
          diff_2023 = round(diff_2023, 2),
-         diff_last_7 = round(diff_last_7, 2))
+         diff_last_10 = round(diff_last_10, 2))
 
 # Get correlations
 correlations_2023 <-
@@ -95,23 +95,44 @@ correlations_2023 <-
 ##%######################################################%##
 
 ui <- fluidPage(
-  sidebarLayout(
-    sidebarPanel(
-      selectInput("match", "Select Match", choices = matches, selected = NULL),
-      selectInput("agency", "Select Agency", choices = agencies, selected = NULL),
-      h3("Selections"),  # Header in sidebar
-      DTOutput("selected"),  # DataTable in sidebar
-      h3("Pairwise Correlations"),
-      DTOutput(outputId = "correlations"),
-      h3("SGM Information"),
-      uiOutput(outputId = "summary"),
-      h3("Odds Comparison"),
-      actionButton("get_comparison", label = "Compare Odds"),
-      DTOutput(outputId = "odds_compare")
+  theme = shinytheme("flatly"),
+  titlePanel("Multitool"),
+  tabsetPanel(
+    tabPanel("SGM",
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("match", "Select Match", choices = matches, selected = NULL),
+                 selectInput("agency", "Select Agency", choices = agencies, selected = NULL),
+                 h3("Selections"),  # Header in sidebar
+                 DT::dataTableOutput("selected"),  # DataTable in sidebar
+                 h3("Pairwise Correlations"),
+                 DT::dataTableOutput("correlations"),
+                 h3("SGM Information"),
+                 uiOutput("summary"),
+                 h3("Odds Comparison"),
+                 actionButton("get_comparison", label = "Compare Odds"),
+                 DT::dataTableOutput("odds_compare")
+               ),
+               
+               mainPanel(
+                 DT::dataTableOutput("table")
+               )
+             )
     ),
-    
-    mainPanel(
-      DTOutput("table")
+    tabPanel("Cross Game Multi",
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("agency_cross", "Select Agency", choices = agencies, selected = NULL),
+                 h3("Selections"),  # Header in sidebar
+                 DT::dataTableOutput("selected_cross"),  # DataTable in sidebar
+                 h3("Multi Information"),
+                 uiOutput("summary_cross")
+               ),
+               
+               mainPanel(
+                 DT::dataTableOutput("table_cross")
+               )
+             )
     )
   )
 )
@@ -124,6 +145,7 @@ ui <- fluidPage(
 
 server <- function(input, output, session) {
   
+  # For the "SGM" panel
   output$table <- renderDT({
     filtered_data <- disposals_display[disposals_display$match == input$match & disposals_display$agency == input$agency,]
     datatable(filtered_data, selection = "multiple")
@@ -163,7 +185,7 @@ server <- function(input, output, session) {
       datatable(comparison_df)
     })
   })
-
+  
   output$summary <- renderUI({
     if(!is.null(input$table_rows_selected)){
       filtered_data <- disposals_display[disposals_display$match == input$match & disposals_display$agency == input$agency,]
@@ -171,10 +193,40 @@ server <- function(input, output, session) {
       uncorrelated_price <- prod(selected_data$price)
       empirical_price <- 1 / prod(selected_data$prob_2023)
       HTML(paste0("<strong>Uncorrelated Price:</strong>", " $", round(uncorrelated_price, 2), "<br/>",
-                 " <strong>Empirical Uncorrelated Price:</strong>", " $", round(empirical_price, 2)))
+                  " <strong>Theoretical Uncorrelated Price:</strong>", " $", round(empirical_price, 2)))
+    }
+  })
+  
+  # For the "Cross Game Multi" panel
+  output$table_cross <- renderDT({
+    filtered_data_cross <- disposals_display[disposals_display$agency == input$agency_cross,]
+    datatable(filtered_data_cross, selection = "multiple")
+  }, server = FALSE) 
+  
+  observeEvent(input$table_cross_rows_selected,{
+    output$selected_cross <- renderDT({
+      if(!is.null(input$table_cross_rows_selected)){
+        filtered_data_cross <- disposals_display[disposals_display$agency == input$agency_cross,]
+        selected_data_cross <- filtered_data_cross[input$table_cross_rows_selected, c("player_name", "number_of_disposals", "price")]
+        datatable(selected_data_cross)
+      }
+    })
+  })
+  
+  output$summary_cross <- renderUI({
+    if(!is.null(input$table_cross_rows_selected)){
+      filtered_data_cross <- disposals_display[disposals_display$agency == input$agency_cross,]
+      selected_data_cross <- filtered_data_cross[input$table_cross_rows_selected, ]
+      uncorrelated_price_cross <- prod(selected_data_cross$price)
+      empirical_price_cross <- 1 / prod(selected_data_cross$prob_2023)
+      diff = 1/empirical_price_cross - 1/uncorrelated_price_cross
+      HTML(paste0("<strong>Multi Price:</strong>", " $", round(uncorrelated_price_cross, 2), "<br/>",
+                  " <strong>Theoretical Multi Price:</strong>", " $", round(empirical_price_cross, 2), "<br/>",
+                  " <strong>Edge:</strong>", " ", round(100*diff, 3), "%"))
     }
   })
 }
+
 
 ##%######################################################%##
 #                                                          #
