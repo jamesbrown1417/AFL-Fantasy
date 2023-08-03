@@ -1,0 +1,1837 @@
+<body>
+<div class="outdated"></div>
+<div class="container bg-white">
+	<div class="row pt-2">
+		<div class="col-12 col-md-3 pl-md-6">
+			<div class="text-center text-md-left pl-md-4">
+				<a class="navbar-brand" href="https://aflcoaches.com.au" onclick="gtag('event', 'Click Header', {
+						'event_category': 'Navigation',
+						'event_label': 'Logo clicked to go home'});">
+					<img alt="AFL Coaches Association Logo" src="https://aflcoaches.com.au/images/aflca_logo.svg" height="120" width="120" class="mt-md-3">
+				</a>
+			</div>
+		</div>
+		<div class="col-12 col-md-9 pr-md-5 text-center text-md-right">
+					</div>
+	</div>
+	
+	<nav class="navbar navbar-expand-md navbar-light">
+		<button class="navbar-toggler border-0 d-sm-flex d-md-none justify-content-center" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+			Menu &nbsp; <em class="far fa-chevron-down"></em>
+		</button>
+		<div class="collapse navbar-collapse " id="navbarSupportedContent">
+			<ul class="navbar-nav nav-fill w-100">
+									
+						<li class="nav-item ">
+							<a class="nav-link" id="menu_Home" href="/home" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'Home'});">
+								Home 
+							</a>
+													</li>
+					
+									
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" id="menu_Votes_&amp;_Awards" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'Votes &amp; Awards'});">
+								Votes &amp; Awards 
+							</a>
+																<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+																																	<a class="dropdown-item" href="/awards" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'All Awards'});">
+													ALL AWARDS
+												</a>
+																																												<a class="dropdown-item" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'AFL Champion Player of the Year'});">
+													AFL CHAMPION PLAYER OF THE YEAR
+												</a>
+																																												<a class="dropdown-item" href="/awards/aflwscoty" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'AFLW Senior Coach of the Year'});">
+													AFLW SENIOR COACH OF THE YEAR
+												</a>
+																																												<a class="dropdown-item" href="/awards/aflw-champion-player-of-the-year-award" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'AFLW Champion Player of the Year'});">
+													AFLW CHAMPION PLAYER OF THE YEAR
+												</a>
+																																												<a class="dropdown-item" href="/awards/allan-jeans-senior-coach-of-the-year-award" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Allan Jeans Senior Coach of the Year'});">
+													ALLAN JEANS SENIOR COACH OF THE YEAR
+												</a>
+																																												<a class="dropdown-item" href="/awards/gary-ayres-award-best-finals-player/leaderboard" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Gary Ayres Award (Best Finals Player)'});">
+													GARY AYRES AWARD (BEST FINALS PLAYER)
+												</a>
+																																												<a class="dropdown-item" href="/awards/assistant-coach-of-the-year-award" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Assistant Coach of the Year'});">
+													ASSISTANT COACH OF THE YEAR
+												</a>
+																																												<a class="dropdown-item" href="/awards/lifetime-achievement-award" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Neale Daniher Lifetime Achievement Award'});">
+													NEALE DANIHER LIFETIME ACHIEVEMENT AWARD
+												</a>
+																																												<a class="dropdown-item" href="/awards/coaching-legend-award" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Coaching Legend'});">
+													COACHING LEGEND
+												</a>
+																																												<a class="dropdown-item" href="/awards/career-education-award" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Career &amp; Education'});">
+													CAREER &amp; EDUCATION
+												</a>
+																																												<a class="dropdown-item" href="/awards/best-young-player-of-the-year" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Best Young Player'});">
+													BEST YOUNG PLAYER
+												</a>
+																																												<a class="dropdown-item" href="/awards/media-award" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'AFLCA Media Award'});">
+													AFLCA MEDIA AWARD
+												</a>
+																																												<a class="dropdown-item" href="/2017-shadforth-financial-group-aflca-awards-night" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': '2017 AFLCA Awards Night'});">
+													2017 AFLCA AWARDS NIGHT
+												</a>
+																																												<a class="dropdown-item" href="/2018-shadforth-financial-group-afl-coaches-awards-night" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': '2018 AFL Coaches Awards Night'});">
+													2018 AFL COACHES AWARDS NIGHT
+												</a>
+																													</div>
+													</li>
+					
+									
+						<li class="nav-item ">
+							<a class="nav-link" id="menu_Podcast" href="/podcast" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'Podcast'});">
+								Podcast 
+							</a>
+													</li>
+					
+									
+						<li class="nav-item dropdown">
+							<a class="nav-link dropdown-toggle" id="menu_Education_&amp;_Training" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'Education &amp; Training'});">
+								Education &amp; Training 
+							</a>
+																<div class="dropdown-menu" aria-labelledby="navbarDropdown">
+																																	<a class="dropdown-item" href="/expert-oneonone-coaching-from-afls-best" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Expert Coaching'});">
+													EXPERT COACHING
+												</a>
+																																												<a class="dropdown-item" href="/womens-coaching-crusade" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Women's Coaching Crusade'});">
+													WOMEN'S COACHING CRUSADE
+												</a>
+																																												<a class="dropdown-item" href="/afl-players-afl-coaches-next-coach-program" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Next Coach Program'});">
+													NEXT COACH PROGRAM
+												</a>
+																																												<a class="dropdown-item" href="/tackle-your-feelings" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Tackle Your Feelings'});">
+													TACKLE YOUR FEELINGS
+												</a>
+																																												<a class="dropdown-item" href="/aflca-jesaulenko-internship" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Jesaulenko Internship'});">
+													JESAULENKO INTERNSHIP
+												</a>
+																																												<a class="dropdown-item" href="/afl-sportsready-executive-courses" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'AFL Sportsready Executive Courses'});">
+													AFL SPORTSREADY EXECUTIVE COURSES
+												</a>
+																																												<a class="dropdown-item" href="/employment" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Employment'});">
+													EMPLOYMENT
+												</a>
+																																												<a class="dropdown-item" href="/study-tours" onclick="gtag('event', 'Click Menu', {
+														'event_category': 'Navigation',
+														'event_label': 'Study Tours'});">
+													STUDY TOURS
+												</a>
+																													</div>
+													</li>
+					
+									
+						<li class="nav-item ">
+							<a class="nav-link" id="menu_Partners" href="/partners" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'Partners'});">
+								Partners 
+							</a>
+													</li>
+					
+									
+						<li class="nav-item ">
+							<a class="nav-link" id="menu_About" href="/about-afl-coaches-association" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'About'});">
+								About 
+							</a>
+													</li>
+					
+									
+						<li class="nav-item ">
+							<a class="nav-link" id="menu_Contact" href="/contact" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'Contact'});">
+								Contact 
+							</a>
+													</li>
+					
+									
+						<li class="nav-item ">
+							<a class="nav-link" id="menu_Members_Only" href="/admin" onclick="gtag('event', 'Click Menu', {
+									'event_category': 'Navigation',
+									'event_label': 'Members Only'});">
+								Members Only 
+							</a>
+													</li>
+					
+							</ul>
+		</div>
+	</nav></div>
+<div class="container bg-white d-none d-md-block">
+	    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Home</a></li>
+            <li class="breadcrumb-item"><a href="/awards">Awards</a></li>
+            <li class="breadcrumb-item"><a href="/awards/the-aflca-champion-player-of-the-year-award">AFLCA Champion Player of the Year</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Leaderboard</li>
+        </ol>
+    </nav>
+</div>
+<div class="container bg-white">
+	<div class="section">
+
+				<div class="p-4">
+					    <div class="row">
+        <div class="col-12">
+                            <figure class="mb-4 award-banner">
+                    <img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/award_images/Flh8ezaWjtFBJEP8TTORX1E0DRpkwNO7qMpE4UEx.jpg" alt="AFLCA Champion Player of the Year" class="img-fluid">
+                </figure>
+                        <p>The AFL Coaches Association’s AFL Champion Player Award is an award voted by the 18 coaching panels on a 5,4,3,2,1 basis after each home and away game, acknowledging outstanding effort by an individual player in a season.</p>
+        </div>
+    </div>
+    
+    </div>
+    </div>
+    </div>
+    <div class="container bg-white mt-md-4">
+                    <div class="section d-md-none">
+                
+                <div class="row">
+                    <div class="col-12 awards-seasons-switcher p-0 mb-1">
+                        <div class="seasons-carousel flickity-enabled is-draggable" id="award-seasons-menu" role="tablist" tabindex="0">
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                            
+                                                    <div class="flickity-viewport" style="height: 0px; touch-action: pan-y;"><div class="flickity-slider" style="left: 0px;"><a class="carousel-cell seasonButton small text-center nav-link active is-selected" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2024'});" aria-selected="true" style="position: absolute;">2023</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2022" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2022'});" aria-selected="false" style="position: absolute;">2022</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2021" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2021'});" aria-selected="false" style="position: absolute;">2021</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2020" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2020'});" aria-selected="false" style="position: absolute;">2020</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2019" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2019'});" aria-selected="false" style="position: absolute;">2019</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2018" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2018'});" aria-selected="false" style="position: absolute;">2018</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2017" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2017'});" aria-selected="false" style="position: absolute;">2017</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2016" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2016'});" aria-selected="false" style="position: absolute;">2016</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2015" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2015'});" aria-selected="false" style="position: absolute;">2015</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2014" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2014'});" aria-selected="false" style="position: absolute;">2014</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2013" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2013'});" aria-selected="false" style="position: absolute;">2013</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2012" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2012'});" aria-selected="false" style="position: absolute;">2012</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2011" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2011'});" aria-selected="false" style="position: absolute;">2011</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2010" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2010'});" aria-selected="false" style="position: absolute;">2010</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2009" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2009'});" aria-selected="false" style="position: absolute;">2009</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2008" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2008'});" aria-selected="false" style="position: absolute;">2008</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2007" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2007'});" aria-selected="false" style="position: absolute;">2007</a><a class="carousel-cell seasonButton small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2006" onclick="gtag('event', 'Changed Season Mobile', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season 2006'});" aria-selected="false" style="position: absolute;">2006</a></div></div></div>
+                    </div>
+                </div>
+            </div>
+                <div class="section">
+            <div class="row d-md-none">
+                <div class="col-12 awards-round-switcher p-0">
+                    <div class="rounds-carousel flickity-enabled is-draggable" id="award-menu-rounds" role="tablist" tabindex="0">
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    
+                                            <div class="flickity-viewport" style="height: 0px; touch-action: pan-y;"><div class="flickity-slider" style="left: 0px;"><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240120" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240120'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R20</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240119" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240119'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R19</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240118" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240118'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R18</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240117" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240117'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R17</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240116" class="carousel-cell roundButton small text-center nav-link active is-selected" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240116'});" aria-selected="true" style="position: absolute;">
+                                Round
+                                <div class="big-number">R16</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240115" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240115'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R15</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240114" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240114'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R14</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240113" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240113'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R13</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240112" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240112'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R12</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240111" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240111'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R11</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240110" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240110'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R10</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240109" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240109'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R9</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240108" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240108'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R8</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240107" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240107'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R7</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240106" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240106'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R6</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240105" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240105'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R5</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240104" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240104'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R4</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240103" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240103'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R3</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240102" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240102'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R2</div>
+                            </a><a href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240101" class="carousel-cell roundButton small text-center nav-link" onclick="gtag('event', 'Click Round Mobile', {
+                                    'event_category': 'Navigation',
+                                    'event_label': '20240101'});" aria-selected="false" style="position: absolute;">
+                                Round
+                                <div class="big-number">R1</div>
+                            </a></div></div></div>
+                </div>
+            </div>
+            <div class="">
+                <div class="row">
+                    <div class="col-md-1 p-0 awards-round-switcher-column d-none d-md-inline">
+                                                    <div class="text-center">
+                                <div class="small text-white pt-2 px-2 ">SEASON</div>
+                                <select name="season_selector" id="season_selector">
+                                                                            <option value="2023" selected="&quot;selected&quot;" data-season="2023">2023</option>
+                                                                            <option value="2022" data-season="2022">2022</option>
+                                                                            <option value="2021" data-season="2021">2021</option>
+                                                                            <option value="2020" data-season="2020">2020</option>
+                                                                            <option value="2019" data-season="2019">2019</option>
+                                                                            <option value="2018" data-season="2018">2018</option>
+                                                                            <option value="2017" data-season="2017">2017</option>
+                                                                            <option value="2016" data-season="2016">2016</option>
+                                                                            <option value="2015" data-season="2015">2015</option>
+                                                                            <option value="2014" data-season="2014">2014</option>
+                                                                            <option value="2013" data-season="2013">2013</option>
+                                                                            <option value="2012" data-season="2012">2012</option>
+                                                                            <option value="2011" data-season="2011">2011</option>
+                                                                            <option value="2010" data-season="2010">2010</option>
+                                                                            <option value="2009" data-season="2009">2009</option>
+                                                                            <option value="2008" data-season="2008">2008</option>
+                                                                            <option value="2007" data-season="2007">2007</option>
+                                                                            <option value="2006" data-season="2006">2006</option>
+                                                                    </select>
+                            </div>
+                                                <div class="nav flex-column nav-pills" id="award-menu" role="tablist" aria-orientation="vertical">
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240120" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240120});">
+                                    Round
+                                    <div class="big-number">R20</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240119" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240119});">
+                                    Round
+                                    <div class="big-number">R19</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240118" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240118});">
+                                    Round
+                                    <div class="big-number">R18</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240117" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240117});">
+                                    Round
+                                    <div class="big-number">R17</div>
+                                </a>
+                                                            <a class="small text-center nav-link active" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240116" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240116});">
+                                    Round
+                                    <div class="big-number">R16</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240115" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240115});">
+                                    Round
+                                    <div class="big-number">R15</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240114" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240114});">
+                                    Round
+                                    <div class="big-number">R14</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240113" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240113});">
+                                    Round
+                                    <div class="big-number">R13</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240112" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240112});">
+                                    Round
+                                    <div class="big-number">R12</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240111" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240111});">
+                                    Round
+                                    <div class="big-number">R11</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240110" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240110});">
+                                    Round
+                                    <div class="big-number">R10</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240109" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240109});">
+                                    Round
+                                    <div class="big-number">R9</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240108" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240108});">
+                                    Round
+                                    <div class="big-number">R8</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240107" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240107});">
+                                    Round
+                                    <div class="big-number">R7</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240106" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240106});">
+                                    Round
+                                    <div class="big-number">R6</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240105" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240105});">
+                                    Round
+                                    <div class="big-number">R5</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240104" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240104});">
+                                    Round
+                                    <div class="big-number">R4</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240103" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240103});">
+                                    Round
+                                    <div class="big-number">R3</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240102" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240102});">
+                                    Round
+                                    <div class="big-number">R2</div>
+                                </a>
+                                                            <a class="small text-center nav-link" href="/awards/the-aflca-champion-player-of-the-year-award/leaderboard/2023/20240101" onclick="gtag('event', 'Click Round Desktop', {
+                                        'event_category': 'Navigation',
+                                        'event_label': 20240101});">
+                                    Round
+                                    <div class="big-number">R1</div>
+                                </a>
+                                                    </div>
+                    </div>
+                    <div class="col-12 col-md-11">
+                        <div class="tab-content" id="v-pills-tabContent">
+                                                        <div class="tab-pane fade show active pl-md-3" id="v-pills-round1" role="tabpanel" aria-labelledby="v-pills-round20-tab">
+                                <div class="row">
+                                    <div class="col-12  h-100 border-right order-1 order-md-0">
+                                        <div class="row">
+                                            <div class="col-12 px-md-0">
+                                                <h2 class="mt-2 text-center text-md-left">Round 16</h2>
+                                                                                            </div>
+                                            <div class="col-12 d-none d-md-flex justify-content-start flex-wrap px-0">
+                                                                                                                                                                                            </div>
+                                            <div class="col-12 col-md-6 mx-md-0">
+                                                <div class="d-flex d-md-none justify-content-around">
+                                                    <a class="btn btn-primary btn-sm" href="#votesByMatch">Votes by
+                                                        Match</a> <a class="btn btn-primary btn-sm" href="#leaderboard">Leaderboard</a>
+                                                                                                    </div>
+                                                <div class="d-flex d-md-none justify-content-around mt-2 mb-4">
+                                                                                                                                                        </div>
+                                                <a name="votesByMatch"></a>
+		<h3 class="d-none d-md-block" style="margin-left: -15px;">Votes by Match</h3>
+		<h3 class="text-center d-md-none">Votes by Match</h3>
+				<div class="pr-md-3 votes-by-match">
+                        															<div class="row bg-primary text-white py-2">
+							<div class="col-12 text-center text-uppercase">
+								<strong>Thu, June 29</strong>
+							</div>
+						</div>
+																<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/166/conversions/brisbane-lions-main.jpg" class="club_logo" alt="Brisbane Lions" title="Brisbane Lions">
+								
+								<strong class="text-muted sr-only">Brisbane Lions</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/177/conversions/richmond-main.jpg" class="club_logo" alt="Richmond" title="Richmond">
+																<strong class="text-muted sr-only">Richmond</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>10</strong>
+								</div>
+								<div class="col-10">
+									Lachie Neale <span class="small font-weight-bold">(BL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>7</strong>
+								</div>
+								<div class="col-10">
+									Hugh McCluggage <span class="small font-weight-bold">(BL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>6</strong>
+								</div>
+								<div class="col-10">
+									Joe Daniher <span class="small font-weight-bold">(BL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Will Ashcroft <span class="small font-weight-bold">(BL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Darcy Wilmot <span class="small font-weight-bold">(BL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Conor McKenna <span class="small font-weight-bold">(BL)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																											<div class="row bg-primary text-white py-2">
+							<div class="col-12 text-center text-uppercase">
+								<strong>Fri, June 30</strong>
+							</div>
+						</div>
+																<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/179/conversions/sydney-swans-main.jpg" class="club_logo" alt="Sydney Swans" title="Sydney Swans">
+								
+								<strong class="text-muted sr-only">Sydney Swans</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/171/conversions/geelong-cats-main.jpg" class="club_logo" alt="Geelong Cats" title="Geelong Cats">
+																<strong class="text-muted sr-only">Geelong Cats</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>8</strong>
+								</div>
+								<div class="col-10">
+									Errol Gulden <span class="small font-weight-bold">(SYD)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>7</strong>
+								</div>
+								<div class="col-10">
+									Nick Blakey <span class="small font-weight-bold">(SYD)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>4</strong>
+								</div>
+								<div class="col-10">
+									Gryan Miers <span class="small font-weight-bold">(GEEL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>4</strong>
+								</div>
+								<div class="col-10">
+									Braeden Campbell <span class="small font-weight-bold">(SYD)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>3</strong>
+								</div>
+								<div class="col-10">
+									Zach Tuohy <span class="small font-weight-bold">(GEEL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>2</strong>
+								</div>
+								<div class="col-10">
+									Callum Mills <span class="small font-weight-bold">(SYD)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Luke Parker <span class="small font-weight-bold">(SYD)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Tom Atkins <span class="small font-weight-bold">(GEEL)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																											<div class="row bg-primary text-white py-2">
+							<div class="col-12 text-center text-uppercase">
+								<strong>Sat, July 1</strong>
+							</div>
+						</div>
+																<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/181/conversions/western-bulldogs-main.jpg" class="club_logo" alt="Western Bulldogs" title="Western Bulldogs">
+								
+								<strong class="text-muted sr-only">Western Bulldogs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/170/conversions/frematle-dockers-main.jpg" class="club_logo" alt="Fremantle" title="Fremantle">
+																<strong class="text-muted sr-only">Fremantle</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>10</strong>
+								</div>
+								<div class="col-10">
+									Jamarra Ugle-Hagan <span class="small font-weight-bold">(WB)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>7</strong>
+								</div>
+								<div class="col-10">
+									Caleb Serong <span class="small font-weight-bold">(FRE)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>4</strong>
+								</div>
+								<div class="col-10">
+									Tom Liberatore <span class="small font-weight-bold">(WB)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>3</strong>
+								</div>
+								<div class="col-10">
+									Bailey Dale <span class="small font-weight-bold">(WB)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>2</strong>
+								</div>
+								<div class="col-10">
+									Marcus Bontempelli <span class="small font-weight-bold">(WB)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>2</strong>
+								</div>
+								<div class="col-10">
+									Sean Darcy <span class="small font-weight-bold">(FRE)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Brennan Cox <span class="small font-weight-bold">(FRE)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Jack Macrae <span class="small font-weight-bold">(WB)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																										<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/165/conversions/adelaide-crows-main.jpg" class="club_logo" alt="Adelaide Crows" title="Adelaide Crows">
+								
+								<strong class="text-muted sr-only">Adelaide Crows</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/175/conversions/north-melbourne-main.jpg" class="club_logo" alt="North Melbourne" title="North Melbourne">
+																<strong class="text-muted sr-only">North Melbourne</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>9</strong>
+								</div>
+								<div class="col-10">
+									Reilly O'Brien <span class="small font-weight-bold">(ADEL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>8</strong>
+								</div>
+								<div class="col-10">
+									Mitchell Hinge <span class="small font-weight-bold">(ADEL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>7</strong>
+								</div>
+								<div class="col-10">
+									Izak Rankine <span class="small font-weight-bold">(ADEL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>3</strong>
+								</div>
+								<div class="col-10">
+									Ben Keays <span class="small font-weight-bold">(ADEL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>2</strong>
+								</div>
+								<div class="col-10">
+									Jordan Dawson <span class="small font-weight-bold">(ADEL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Rory Sloane <span class="small font-weight-bold">(ADEL)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																										<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/182/conversions/gold-coast-suns-main.jpg" class="club_logo" alt="Gold Coast Suns" title="Gold Coast Suns">
+								
+								<strong class="text-muted sr-only">Gold Coast Suns</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/168/conversions/collingwood-main.jpg" class="club_logo" alt="Collingwood" title="Collingwood">
+																<strong class="text-muted sr-only">Collingwood</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>10</strong>
+								</div>
+								<div class="col-10">
+									Nick Daicos <span class="small font-weight-bold">(COLL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Jamie Elliott <span class="small font-weight-bold">(COLL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									John Noble <span class="small font-weight-bold">(COLL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Darcy Moore <span class="small font-weight-bold">(COLL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>4</strong>
+								</div>
+								<div class="col-10">
+									Josh Daicos <span class="small font-weight-bold">(COLL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Oleg Markov <span class="small font-weight-bold">(COLL)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																										<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/169/conversions/essendon-main.jpg" class="club_logo" alt="Essendon" title="Essendon">
+								
+								<strong class="text-muted sr-only">Essendon</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/176/conversions/port-adelaide-main.jpg" class="club_logo" alt="Port Adelaide" title="Port Adelaide">
+																<strong class="text-muted sr-only">Port Adelaide</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>10</strong>
+								</div>
+								<div class="col-10">
+									Dan Houston <span class="small font-weight-bold">(PORT)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Connor Rozee <span class="small font-weight-bold">(PORT)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>4</strong>
+								</div>
+								<div class="col-10">
+									Kane Farrell <span class="small font-weight-bold">(PORT)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>4</strong>
+								</div>
+								<div class="col-10">
+									Jye Caldwell <span class="small font-weight-bold">(ESS)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>4</strong>
+								</div>
+								<div class="col-10">
+									Zach Merrett <span class="small font-weight-bold">(ESS)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>3</strong>
+								</div>
+								<div class="col-10">
+									Andrew Phillips <span class="small font-weight-bold">(ESS)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																											<div class="row bg-primary text-white py-2">
+							<div class="col-12 text-center text-uppercase">
+								<strong>Sun, July 2</strong>
+							</div>
+						</div>
+																<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/173/conversions/hawthorn-hawks-main.jpg" class="club_logo" alt="Hawthorn" title="Hawthorn">
+								
+								<strong class="text-muted sr-only">Hawthorn</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/167/conversions/carlton-main.jpg" class="club_logo" alt="Carlton" title="Carlton">
+																<strong class="text-muted sr-only">Carlton</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>10</strong>
+								</div>
+								<div class="col-10">
+									Adam Cerra <span class="small font-weight-bold">(CARL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Sam Walsh <span class="small font-weight-bold">(CARL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Jacob Weitering <span class="small font-weight-bold">(CARL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Harry McKay <span class="small font-weight-bold">(CARL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>3</strong>
+								</div>
+								<div class="col-10">
+									Blake Acres <span class="small font-weight-bold">(CARL)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>2</strong>
+								</div>
+								<div class="col-10">
+									Patrick Cripps <span class="small font-weight-bold">(CARL)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																										<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/174/conversions/melbourne-main.jpg" class="club_logo" alt="Melbourne" title="Melbourne">
+								
+								<strong class="text-muted sr-only">Melbourne</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/172/conversions/greater-western-sydney-gws-giants-main.jpg" class="club_logo" alt="GWS Giants" title="GWS Giants">
+																<strong class="text-muted sr-only">GWS Giants</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>9</strong>
+								</div>
+								<div class="col-10">
+									Jack Viney <span class="small font-weight-bold">(MELB)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>9</strong>
+								</div>
+								<div class="col-10">
+									Josh Kelly <span class="small font-weight-bold">(GWS)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>6</strong>
+								</div>
+								<div class="col-10">
+									Nick Haynes <span class="small font-weight-bold">(GWS)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>2</strong>
+								</div>
+								<div class="col-10">
+									Lachie Hunter <span class="small font-weight-bold">(MELB)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>2</strong>
+								</div>
+								<div class="col-10">
+									Christian Petracca <span class="small font-weight-bold">(MELB)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Tom Green <span class="small font-weight-bold">(GWS)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Jake Bowey <span class="small font-weight-bold">(MELB)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+																										<div class="row votes-by-match py-3">
+						<div class="col-12 d-flex align-content-between align-items-center justify-content-between">
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/180/conversions/west-coast-eagles-main.jpg" class="club_logo" alt="West Coast Eagles" title="West Coast Eagles">
+								
+								<strong class="text-muted sr-only">West Coast Eagles</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center font-weight-bold">
+								<strong class="font-weight-bold">vs</strong>
+							</div>
+							<div class="d-flex flex-column align-items-center px-2">
+																	<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/178/conversions/st-kilda-main.jpg" class="club_logo" alt="St Kilda" title="St Kilda">
+																<strong class="text-muted sr-only">St Kilda</strong>
+							</div>
+						</div>
+					</div>
+										<div class="row mb-3">
+						<div class="col-12 py-2">
+							<div class="row border-bottom small bg-light">
+								<div class="col-2 text-uppercase text-center small">
+									<strong>Votes</strong>
+								</div>
+								<div class="col-10 text-uppercase small">
+									<strong>Player (Club)</strong>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>7</strong>
+								</div>
+								<div class="col-10">
+									Luke Shuey <span class="small font-weight-bold">(WCE)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>7</strong>
+								</div>
+								<div class="col-10">
+									Rowan Marshall <span class="small font-weight-bold">(STK)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>7</strong>
+								</div>
+								<div class="col-10">
+									Mitch Owens <span class="small font-weight-bold">(STK)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>5</strong>
+								</div>
+								<div class="col-10">
+									Jack Sinclair <span class="small font-weight-bold">(STK)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>3</strong>
+								</div>
+								<div class="col-10">
+									Tom Barrass <span class="small font-weight-bold">(WCE)</span>
+								</div>
+							</div>
+														<div class="row border-bottom pt-1 pb-1 div-hover">
+								<div class="col-2 text-center">
+									<strong>1</strong>
+								</div>
+								<div class="col-10">
+									Jack Steele <span class="small font-weight-bold">(STK)</span>
+								</div>
+							</div>
+													</div>
+					</div>
+														</div>
+		<div id="emailVotes" class="modal" tabindex="-1" role="dialog">
+			<form class="form" id="joinVotesMailingList" method="POST" data-protonpass-form="">
+			<div class="modal-dialog" role="document">
+			  <div class="modal-content">
+				<div class="modal-header bg-danger text-white ">
+				  <h5 class="modal-title d-block">Join the list</h5>
+				  <button type="button" class="close votesNoThanks" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span>
+				  </button>
+				</div>
+				<div class="modal-body">
+				  <p class="text-danger">RECEIVE THE COACHES VOTES AS SOON AS THEY ARE IN!</p>
+					  <div class="form-group">
+							<label for="votesemail">Email address</label>
+						  <input class="form-control" type="email" name="votesemail" id="votesemail" required="" aria-required="true">
+					  </div>
+					  <div class="votesemailreply"></div>
+				</div>
+				<div class="modal-footer">
+				  <button type="button" class="btn float-left votesNoThanks">No thanks</button>
+				  <button type="submit" class="btn btn-primary addVotesEmail">Add me</button>
+				</div>
+			  </div>
+			</div>
+			</form>
+		  </div>
+                                            </div>
+                                            <div class="col-12 col-md-6 h-100 sticky mb-4">
+                                                <a name="leaderboard"></a>
+                                                <h3>Leaderboard</h3>
+
+			<table class="table table-hover table-sm" data-protonpass-ignore="">
+				<thead>
+									<tr class="bg-danger text-white border-0">
+						<th class="text-uppercase small text-center border-0"><strong>Votes</strong></th>
+						<th class="text-uppercase small border-0"><strong>Player</strong></th>
+						<th class="text-uppercase small border-0"><strong>Club</strong></th>
+					</tr>
+									</thead>
+				<tbody>
+											<tr>
+							<td class="text-center"><strong>82</strong></td>
+							<td>Nick Daicos</td>
+							<td class="text-uppercase small font-weight-bold text-muted">COLL</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>76</strong></td>
+							<td>Zak Butters</td>
+							<td class="text-uppercase small font-weight-bold text-muted">PORT</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>69</strong></td>
+							<td>Christian Petracca</td>
+							<td class="text-uppercase small font-weight-bold text-muted">MELB</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>63</strong></td>
+							<td>Lachie Neale</td>
+							<td class="text-uppercase small font-weight-bold text-muted">BL</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>62</strong></td>
+							<td>Tim Taranto</td>
+							<td class="text-uppercase small font-weight-bold text-muted">RICH</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>58</strong></td>
+							<td>Jordan Dawson</td>
+							<td class="text-uppercase small font-weight-bold text-muted">ADEL</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>57</strong></td>
+							<td>Jack Sinclair</td>
+							<td class="text-uppercase small font-weight-bold text-muted">STK</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>56</strong></td>
+							<td>Zach Merrett</td>
+							<td class="text-uppercase small font-weight-bold text-muted">ESS</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>55</strong></td>
+							<td>Marcus Bontempelli</td>
+							<td class="text-uppercase small font-weight-bold text-muted">WB</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>53</strong></td>
+							<td>Connor Rozee</td>
+							<td class="text-uppercase small font-weight-bold text-muted">PORT</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>53</strong></td>
+							<td>Caleb Serong</td>
+							<td class="text-uppercase small font-weight-bold text-muted">FRE</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>52</strong></td>
+							<td>Noah Anderson</td>
+							<td class="text-uppercase small font-weight-bold text-muted">GCFC</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>52</strong></td>
+							<td>Toby Greene</td>
+							<td class="text-uppercase small font-weight-bold text-muted">GWS</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>47</strong></td>
+							<td>Jordan De Goey</td>
+							<td class="text-uppercase small font-weight-bold text-muted">COLL</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>45</strong></td>
+							<td>Matt Rowell</td>
+							<td class="text-uppercase small font-weight-bold text-muted">GCFC</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>44</strong></td>
+							<td>Dan Houston</td>
+							<td class="text-uppercase small font-weight-bold text-muted">PORT</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>43</strong></td>
+							<td>Chad Warner</td>
+							<td class="text-uppercase small font-weight-bold text-muted">SYD</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>42</strong></td>
+							<td>Darcy Moore</td>
+							<td class="text-uppercase small font-weight-bold text-muted">COLL</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>40</strong></td>
+							<td>Clayton Oliver</td>
+							<td class="text-uppercase small font-weight-bold text-muted">MELB</td>
+						</tr>
+											<tr>
+							<td class="text-center"><strong>39</strong></td>
+							<td>Adam Cerra</td>
+							<td class="text-uppercase small font-weight-bold text-muted">CARL</td>
+						</tr>
+									</tbody>
+							</table>
+                                                                                                    <div class="text-center mb-4">
+                                                        <a href="/awards/the-aflca-champion-player-of-the-year-award" class="btn btn-primary mt-3"><em class="fal fa-trophy"></em>
+                                                            &nbsp;View All Winners</a>
+                                                    </div>
+                                                                                                <div class="text-center">
+                                                    <img class="img-fluid h-25 w-25" src="/images/aflca-logo-with-year.jpg" alt="AFL Coaches Association Logo">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                                                    </div>
+                            </div>
+                                                    </div>
+                    </div>
+                </div>
+                				</div>
+
+	</div>
+</div>
+<div class="container">
+	<div class="d-flex flex-row flex-wrap justify-content-between align-items-center sponsor-parade">
+                    <div class="my-4 mx-2">
+                <a href="/partner/zurich" onclick="gtag('event', 'Click Partner Parade', {
+                                'event_category': 'Partners',
+                                'event_label': 'Zurich'});">
+                    <img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/189/Zurich_72_Logo_Vert_Blue_RGB.png" class="">
+                </a>
+            </div>
+                    <div class="my-4 mx-2">
+                <a href="/partner/foxtel" onclick="gtag('event', 'Click Partner Parade', {
+                                'event_category': 'Partners',
+                                'event_label': 'Foxtel'});">
+                    <img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/218/Foxtel_Orange@2x-100.jpg" class="">
+                </a>
+            </div>
+                    <div class="my-4 mx-2">
+                <a href="/partner/reiv" onclick="gtag('event', 'Click Partner Parade', {
+                                'event_category': 'Partners',
+                                'event_label': 'Real Estate Institute of Victoria (REIV)'});">
+                    <img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/118/reiv.png" class="">
+                </a>
+            </div>
+            </div>
+</div>
+<div class="container bg-white">
+	</div>
+<footer class="footer">
+	<div class="footer-top text-weight-bold">
+		<section class="section">
+	        <div class="container">
+				<div class="row pt-5 pb-1">
+					<div class="col-6 col-md-4 p-3 order-2 order-md-0">
+						<img alt="AFL Coaches Association Logo" class="logo-footer pb-3" src="https://aflcoaches.com.au/images/aflca_logo.svg" width="114" height="92">
+						<p>The AFL Coaches Association is the collective<br> representative voice of coaches in the <br>Australian Football League.</p>
+					</div>
+					<div class="col-12 col-md-6 text-centered order-0 order-md-1 pr-md-5">
+													<h3>Vote alerts</h3>
+<form id="sign_up_form" data-protonpass-form="">
+	<label for="email">Sign-up to receive updates when new votes are released.</label>
+	<input type="hidden" name="_token" value="Rc64hsgPAKvv14Gce3V8IiuGnSTUpQTaTXzqjJWN" data-protonpass-ignore="">
+	<div class="form-group">
+		<protonpass-control style="display: none;"></protonpass-control><input class="form-control input-control-sm" type="text" name="email" id="email" placeholder="Email address" data-protonpass-field="" data-protonpass-field-type="email" style="padding-right: 41.6px !important;" data-protonpass-base-css="{&quot;padding-right&quot;:&quot;&quot;}">
+	</div>
+	<div class="form-group">
+		<div class="btn btn-primary btn-sm signUpButton form-control">Sign up</div>
+	</div>
+	<div class="signUpThanks"></div>
+</form>
+											</div>
+					<div class="col-6 col-md-2 order-3 order-md-3 p-0">
+						<p class="small font-weight-bold text-uppercase pb-0 mb-0 color-grey">Contact</p>
+						<p>Level 2,<br>
+						170 Bridport Street<br>
+						Albert Park Vic 3206</p>
+					<em class="fal fa-phone fa-rotate-90 text-muted" title="Phone"></em> (03) 8651 4390<br>
+					<em class="fal fa-fax text-muted" title="Fax"></em> (03) 8651 4305
+					<br>
+					<em class="fal fa-at text-muted" title="Email"></em>
+						<a href="mailto:info@aflcoaches.com.au" onclick="gtag('event', 'Click Footer', {
+								   'event_category': 'Social',
+								   'event_label': 'Email link: info@aflcoaches.com.au'});">info@aflcoaches.com.au</a>
+					<br>
+					<a href="https://twitter.com/aflcoaches" target="_blank" onclick="gtag('event', 'Click Footer', {
+								   'event_category': 'Social',
+								   'event_label': 'Twitter link'});"><span class="icon is-small"><i class="fab fa-twitter"></i></span> <span>@AFLCoaches</span></a>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+	<div class="footer-bottom is-size-8 pt-2 pb-2">
+		<section class="section">
+        	<div class="container">
+				<div class="row">
+					<div class="col-sm-12 col-md-6 text-center text-md-left ">
+						© 2023 AFL Coaches Association. All rights reserved.
+					</div>
+					<div class="col-sm-12 col-md-6 text-md-right text-center">
+						<a href="http://www.programmablesoda.com.au" target="_blank" rel="noopener" onclick="gtag('event', 'Click Footer', {
+								   'event_category': 'Social',
+								   'event_label': 'PS link'});">Website by Programmable Soda</a>
+					</div>
+				</div>
+			</div>
+		</section>
+	</div>
+</footer>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" rel="noopener"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous" rel="noopener"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous" rel="noopener"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.3.5/jquery.fancybox.min.js" rel="noopener"></script>
+<script type="text/javascript" src="https://aflcoaches.com.au/js/app.js"></script>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async="" src="https://www.googletagmanager.com/gtag/js?id=UA-10257829-2"></script>
+<script>
+	window.dataLayer = window.dataLayer || [];
+	function gtag(){dataLayer.push(arguments);}
+	gtag('js', new Date());
+
+	gtag('config', 'UA-10257829-2');
+</script>
+
+                    <script src="https://aflcoaches.com.au/js/flickity.min.js" type="text/javascript"></script>
+                    <script>
+                        $(document).on('click', '.roundButton', function (e) {
+                            x = $(this).attr('data-tabID');
+                            $('.roundButton').removeClass('is-selected');
+                            $('.roundButton').removeClass('active');
+                            $('#v-pills-round' + x + '-smtab').addClass('active');
+                            $('#v-pills-round' + x + '-smtab').addClass('is-selected');
+                            $('#v-pills-round' + x + '-tab').tab('show');
+
+                        })
+                        $('.rounds-carousel').flickity({
+                            cellAlign: 'center',
+                            wrapAround: true,
+                            contain: true,
+                            prevNextButtons: false,
+                            pageDots: false,
+                            initialIndex: 4
+                        });
+                        $('.seasons-carousel').flickity({
+                            cellAlign: 'center',
+                            wrapAround: true,
+                            contain: true,
+                            prevNextButtons: false,
+                            pageDots: false,
+                            initialIndex: 0
+                        });
+
+                        $(document).on('click', '.advisor-button', function () {
+                            $('.advisors-on-modal').addClass('d-none');
+                            $('#name').val('');
+                            $('#surname').val('');
+                            $('#enquiry_email').val('');
+                            $('#phone').val('');
+                            $('#thanks-notice').addClass('d-none');
+                            $.post('/admin/ajax/register-advisor-interest/' + $(this).data('id'), {
+                                _token: 'Rc64hsgPAKvv14Gce3V8IiuGnSTUpQTaTXzqjJWN',
+                                id: $(this).data('id')
+                            })
+                                .done(function (response) {
+
+                                });
+                            $('#advisor' + $(this).data('id')).removeClass('d-none');
+                            $('#advisor_id').val($(this).data('id'));
+                            $('.advisor-name-insert').html();
+                            $('#shadforth-modal').removeClass('d-none');
+                        });
+
+                        $(document).on('submit', '#shadforth-form', function () {
+                            if ($('#name').val() == '' || $('#surname').val() == "" || ($('#enquiry_email').val() == "" && $('#phone').val() == "")) {
+                                alert("Please complete the form before submitting it.");
+                                return false;
+                            }
+                            $.post('/admin/ajax/send-enquiry', {
+                                _token: 'Rc64hsgPAKvv14Gce3V8IiuGnSTUpQTaTXzqjJWN',
+                                advisor_id: $('#advisor_id').val(),
+                                name: $('#name').val(),
+                                surname: $('#surname').val(),
+                                email: $('#enquiry_email').val(),
+                                phone: $('#phone').val(),
+                                preferred_contact_type: $('#preferred_contact_type').val()
+                            })
+                                .done(function (response) {
+                                    $('#name').val('');
+                                    $('#surname').val('');
+                                    $('#enquiry_email').val('');
+                                    $('#phone').val('');
+                                    $('#thanks-notice').removeClass('d-none');
+                                });
+                            return false;
+                        });
+
+                        $('#shadforthModal').on('hidden.bs.modal', function (e) {
+                            $('.advisors-on-modal').addClass('d-none');
+                            $('#advisor_id').val('');
+                            $('#name').val('');
+                            $('#surname').val('');
+                            $('#enquiry_email').val('');
+                            $('#phone').val('');
+                            $('#thanks-notice').addClass('d-none');
+                        });
+
+                                                // Removing as directed
+                        //$('#emailVotes').modal('show');
+                        
+                        $(document).on('submit', '#joinVotesMailingList', function () {
+                            if ($('#votesemail').val() == "") {
+                                alert("Please provide your email address before submitting.");
+                                return false;
+                            }
+                            $.post('/ajax/join-list', {
+                                _token: 'Rc64hsgPAKvv14Gce3V8IiuGnSTUpQTaTXzqjJWN',
+                                email: $('#votesemail').val()
+                            })
+                                .done(function (response) {
+                                    $('#votesemail').val('');
+                                    $('.votesemailreply').html(response.notice);
+                                });
+                            return false;
+                        });
+
+                        $(document).on('click', '.votesNoThanks', function () {
+                            $.post('/ajax/decline-list', {
+                                _token: 'Rc64hsgPAKvv14Gce3V8IiuGnSTUpQTaTXzqjJWN'
+                            })
+                                .done(function (response) {
+                                    $('#emailVotes').modal('hide');
+                                });
+                            return false;
+                        });
+
+                        $(document).on('change', '#season_selector', function () {
+
+                            gtag('event', 'Changed Season Desktop', {
+                                'event_category': 'Navigation',
+                                'event_label': 'Switched season ' + $(this).val()
+                            });
+                            window.location = '/awards/the-aflca-champion-player-of-the-year-award/leaderboard/' + $(this).val();
+                        })
+
+                        $('#emailVotes').on('hidden.bs.modal', function (e) {
+                            $.post('/ajax/decline-list', {
+                                _token: 'Rc64hsgPAKvv14Gce3V8IiuGnSTUpQTaTXzqjJWN'
+                            })
+                                .done(function (response) {
+                                    $('#emailVotes').modal('hide');
+                                });
+                            return false;
+                        })
+                    </script>
+
+<form action="" name="shadforth-form" id="shadforth-form" data-protonpass-form="">
+<div class="modal fade" id="shadforthModal" tabindex="-1" role="dialog" aria-labelledby="shadforthModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg" role="document">
+		<div class="modal-content">
+			<div class="modal-header align-items-center">
+				<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/sponsors/shadforth-financial-group.svg" alt="Shadforth Financial Group" class="img-fluid sponsor-image">
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span>
+				</button>
+			</div>
+			<div class="modal-body container-fluid shadforth-form">
+				<div class="row">
+					<div class="col-12 col-md-3">
+																				<div id="advisor2" class="row advisors-on-modal d-none">
+								<div class="col-4 col-md-12">
+									<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/2/conversions/Brad-WIRA-thumb.jpg" class="img-fluid">
+								</div>
+								<div class="col-8 col-md-12">
+									<div class="advisor-name">Brad Wira</div>
+									<div class="advisor-phone"><a href="tel:0417 368 454">0417 368 454</a></div>
+									<div class="advisor-email"><a href="mailto:brad.wira@sfg.com.au">brad.wira@sfg.com.au</a></div>
+								</div>
+							</div>
+														<div id="advisor4" class="row advisors-on-modal d-none">
+								<div class="col-4 col-md-12">
+									<img src="https://aflca-static.s3-ap-southeast-2.amazonaws.com/media/4/conversions/Mark-Porter-thumb.jpg" class="img-fluid">
+								</div>
+								<div class="col-8 col-md-12">
+									<div class="advisor-name">Mark Porter</div>
+									<div class="advisor-phone"><a href="tel:0416 154 396">0416 154 396</a></div>
+									<div class="advisor-email"><a href="mailto:mark.porter@sfg.com.au">mark.porter@sfg.com.au</a></div>
+								</div>
+							</div>
+																			<hr class="d-block d-md-none">
+					</div>
+					<div class="col-12 col-md-9">
+						<input type="hidden" id="advisor_id" name="advisor_id" value="" data-protonpass-ignore="">
+						<div class="row">
+							<div class="col-12">
+								To have an advisor contact you please supply your details below.
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12 col-md-6">
+								<div class="form-group">
+									<label for="name">Name</label>
+									<input type="text" class="form-control" id="name" name="name" placeholder="Your Name">
+								</div>
+							</div>
+							<div class="col-12 col-md-6">
+								<div class="form-group">
+									<label for="surname">Surname</label>
+									<input type="text" class="form-control" id="surname" name="surname" placeholder="Your Surname">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12 col-md-6">
+								<div class="form-group">
+									<label for="phone">Phone</label>
+									<input type="text" class="form-control" id="phone" name="phone" placeholder="Phone">
+								</div>
+							</div>
+							<div class="col-12 col-md-6">
+								<div class="form-group">
+									<label for="enquiry_email">Email</label>
+									<input type="email" class="form-control" id="enquiry_email" name="enquiry_email" placeholder="Email address">
+								</div>
+							</div>
+						</div>
+						<div class="row">
+							<div class="col-12 col-md-6">
+								<div class="form-group">
+									<label for="preferred_contact_type">Preferred Contact Method</label>
+									<select class="form-control" name="preferred_contact_type" id="preferred_contact_type">
+										<option value="no preference">Phone or Email</option>
+										<option value="phone">Phone</option>
+										<option value="email">Email</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-footer">
+				<div id="thanks-notice" class="d-none">Thank you, we'll be in touch shortly.</div>
+				<button type="submit" class="btn btn-primary">Submit</button>
+				<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+</form>
+<div id="loom-companion-mv3" ext-id="liecbddmkiiihnedobmlmillhodjkdmb"><section id="shadow-host-companion"></section></div><protonpass-root style="display: none;"></protonpass-root></body>
