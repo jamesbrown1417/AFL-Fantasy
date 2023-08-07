@@ -92,15 +92,26 @@ call_sgm_tab <- function(data, player_names, disposal_counts) {
     combined_list <- paste(player_names, disposal_counts, sep = ": ")
     player_string <- paste(combined_list, collapse = ", ")
     
-    output_data <- data.frame(
-      Selections = player_string,
-      Unadjusted_Price = unadjusted_price,
-      Adjusted_Price = adjusted_price,
-      Adjustment_Factor = adjustment_factor,
-      Agency = 'TAB'
-    )
+    output_data <- tryCatch({
+      data.frame(
+        Selections = player_string,
+        Unadjusted_Price = unadjusted_price,
+        Adjusted_Price = adjusted_price,
+        Adjustment_Factor = adjustment_factor,
+        Agency = 'TAB'
+      )
+    }, error = function(e) {
+      data.frame(
+        Selections = NA_character_,
+        Unadjusted_Price = NA_real_,
+        Adjusted_Price = NA_real_,
+        Adjustment_Factor = NA_real_,
+        Agency = NA_character_
+      )
+    })
     
     return(output_data)
+    
   }, error = function(e) {
     print(paste("Error: ", e))
   })
