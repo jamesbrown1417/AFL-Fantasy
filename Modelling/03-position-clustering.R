@@ -115,49 +115,49 @@ rename(position = `afl_positions$cluster`)
 cluster_1 <-
 afl_positions.df |>
 filter(position == 1) |>
-filter(round == 19) |>
+filter(round == 21) |>
 distinct(player_name)
 
 # Cluster 2
 cluster_2 <-
 afl_positions.df |>
 filter(position == 2) |>
-filter(round == 19) |>
+filter(round == 21) |>
 distinct(player_name)
 
 # Cluster 3
 cluster_3 <-
   afl_positions.df |>
   filter(position == 3) |>
-  filter(round == 19) |>
+  filter(round == 21) |>
   distinct(player_name)
 
 # Cluster 4
 cluster_4 <-
   afl_positions.df |>
   filter(position == 4) |>
-  filter(round == 19) |>
+  filter(round == 21) |>
   distinct(player_name)
 
 # Cluster 5
 cluster_5 <-
   afl_positions.df |>
   filter(position == 5) |>
-  filter(round == 19) |>
+  filter(round == 21) |>
   distinct(player_name)
 
 # Cluster 6
 cluster_6 <-
   afl_positions.df |>
   filter(position == 6) |>
-  filter(round == 19) |>
+  filter(round == 21) |>
   distinct(player_name)
 
 # Cluster 7
 cluster_7 <-
   afl_positions.df |>
   filter(position == 7) |>
-  filter(round == 19) |>
+  filter(round == 21) |>
   distinct(player_name)
 
 # Add cluster names to dataframe
@@ -165,12 +165,12 @@ afl_positions.df <-
   afl_positions.df |>
   mutate(position_name = case_when(
     position == 1 ~ "Key FWD",
-    position == 2 ~ "Inside Mid",
-    position == 3 ~ "Ruck",
-    position == 4 ~ "Outside Mid",
-    position == 5 ~ "Key DEF",
-    position == 6 ~ "Gen FWD",
-    position == 7 ~ "Gen DEF"
+    position == 2 ~ "Gen DEF",
+    position == 3 ~ "Key DEF",
+    position == 4 ~ "Ruck",
+    position == 5 ~ "Outside MID",
+    position == 6 ~ "Inside MID",
+    position == 7 ~ "Gen FWD"
   ))
 
 # Output to data folder

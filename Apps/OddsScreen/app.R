@@ -204,14 +204,21 @@ disposals |>
     select(-team_1, -team_2, -opposition_team, -player_team)
 
 # Add matchup Data - Fantasy
-fantasy <-
+tryCatch(
+  fantasy <-
     fantasy |> 
     ungroup() |>
     left_join(player_positions) |>
     separate(match, into = c("team_1", "team_2"), sep = " v ", remove = FALSE) |>
     mutate(opposition_team = ifelse(player_team == team_1, team_2, team_1)) |>
     left_join(fantasy_dvp_10) |>
-    select(-team_1, -team_2, -opposition_team, -player_team)
+    select(-team_1, -team_2, -opposition_team, -player_team),
+  error = function(e){
+    print(paste("Error in processing Fantasy: ", e))
+    NULL
+  }
+)
+
 
 # Create an average odds column
 disposals <-
@@ -223,7 +230,7 @@ disposals |>
 
 # round all numeric columns to 2 decimal places
 disposals <- disposals |> mutate_if(is.numeric, round, digits = 2)
-h2h <- h2h |> mutate_if(is.numeric, round, digits = 2)
+h2h <- h2h |> mutate_if(is.numeric, round, digits = 2) |> arrange(margin)
 fantasy <- fantasy |> mutate_if(is.numeric, round, digits = 2)
 goals <- goals |> mutate_if(is.numeric, round, digits = 2)
 goals <- goals |> distinct(match, player_name, number_of_goals, price, agency, .keep_all = TRUE)
@@ -505,7 +512,12 @@ server <- function(input, output, session) {
         }
         
         if (input$only_best_odds_fantasy) {
-          df <- df %>% filter(max_player_diff == diff_2023)
+          df <-
+            df %>%
+            group_by(player_name, match, fantasy_points) %>%
+            mutate(max_player_diff = max(diff_2023, na.rm = TRUE)) %>%
+            filter(max_player_diff == diff_2023) %>%
+            select(-max_player_diff)
         }
         
         return(df)

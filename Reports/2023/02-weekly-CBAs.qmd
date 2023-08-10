@@ -31,7 +31,7 @@ source("../../Functions/data_processing_functions.R")
 #| results: asis
 
 # Get latest round
-current_round <- fetch_fixture()$compSeason.currentRoundNumber[[1]]
+current_round <- fetch_fixture()$compSeason.currentRoundNumber[[1]] - 1
 
 # Get Data
 current_round_data <- get_fantasy_data(season = 2023, round_number = current_round)

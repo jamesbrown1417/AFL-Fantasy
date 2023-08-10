@@ -45,75 +45,25 @@ First, look at which teams give up the most disposals to opposition players
 #| tbl-colwidths: true
 #| column: screen
 # Overall
+disposals_by_match <-
 current_season_data |> 
-  group_by(opposition_team, round) |> 
-  summarise(total_disposals = sum(disposals), median_disposals = median(disposals)) |> 
-  pivot_wider(names_from = round, values_from = c("total_disposals", "median_disposals")) |> 
-  janitor::clean_names() |> 
-  relocate(median_disposals_round_1, .after = total_disposals_round_1) |> 
-  mutate(total_disposals_overall = total_disposals_round_1 + total_disposals_round_2) |> 
-  arrange(desc(total_disposals_overall))
-```
+  group_by(match_name, round, venue) |> 
+  summarise(total_disposals = sum(disposals)) |> 
+  arrange(desc(total_disposals))
 
-```{r}
-# Get player disposals dataset
-player_disposals_data_all <-
-player_history |> 
-  select(player_full_name, opposition_team, season_name, round, match_result_string, venue, tog_percentage, disposals) |> 
-  arrange(player_full_name, desc(season_name), desc(round)) |> 
-  mutate(`proportion_15+_career` = mean(disposals >= 15), .by = player_full_name) |> 
-    mutate(`proportion_20+_career` = mean(disposals >= 20), .by = player_full_name) |> 
-  mutate(`proportion_25+_career` = mean(disposals >= 25), .by = player_full_name) |> 
-    mutate(`proportion_30+_career` = mean(disposals >= 30), .by = player_full_name) |> 
-      mutate(`proportion_35+_career` = mean(disposals >= 35), .by = player_full_name)
+# Get disposals per venue
+disposals_by_venue <-
+disposals_by_match |>
+  group_by(venue) |>
+  summarise(avg_disposals = mean(total_disposals)) |>
+  arrange(desc(avg_disposals))
 
-# Last season
-player_disposals_data_2022 <-
-player_history |> 
-  select(player_full_name, opposition_team, season_name, round, match_result_string, venue, tog_percentage, disposals) |> 
-  arrange(player_full_name, desc(season_name), desc(round)) |> 
-  filter(season_name == '2022') |> 
-  mutate(`proportion_15+_2022` = mean(disposals >= 15), .by = player_full_name) |> 
-    mutate(`proportion_20+_2022` = mean(disposals >= 20), .by = player_full_name) |> 
-  mutate(`proportion_25+_2022` = mean(disposals >= 25), .by = player_full_name) |> 
-    mutate(`proportion_30+_2022` = mean(disposals >= 30), .by = player_full_name) |> 
-      mutate(`proportion_35+_2022` = mean(disposals >= 35), .by = player_full_name) |> 
-  distinct(player_full_name, .keep_all = TRUE) |> 
-  select(player_full_name, contains("proportion"))
+# Disposals by round
+disposals_by_match |>
+  group_by(round) |>
+  summarise(avg_disposals = mean(total_disposals)) |>
+  arrange(as.integer(str_extract(round, "\\d+")))
 
-# This season
-player_disposals_data_2023 <-
-player_history |> 
-  select(player_full_name, opposition_team, season_name, round, match_result_string, venue, tog_percentage, disposals) |> 
-  arrange(player_full_name, desc(season_name), desc(round)) |> 
-    filter(season_name == '2023') |> 
-  mutate(`proportion_15+_2023` = mean(disposals >= 15), .by = player_full_name) |> 
-    mutate(`proportion_20+_2023` = mean(disposals >= 20), .by = player_full_name) |> 
-  mutate(`proportion_25+_2023` = mean(disposals >= 25), .by = player_full_name) |> 
-    mutate(`proportion_30+_2023` = mean(disposals >= 30), .by = player_full_name) |> 
-      mutate(`proportion_35+_2023` = mean(disposals >= 35), .by = player_full_name) |> 
-  distinct(player_full_name, .keep_all = TRUE) |> 
-  select(player_full_name, contains("proportion"))
-
-# Join
-player_disposals_data_all <-
-player_disposals_data_all |> 
-  left_join(player_disposals_data_2022) |> 
-  left_join(player_disposals_data_2023) |> 
-  select(player_full_name:disposals,
-         contains("15+"),
-         contains("20+"),
-         contains("25+"),
-         contains("30+"),
-         contains("35+"))
-  
-```
-
-```{r}
-# Fit models
-tom_mitchell_data <-
-player_disposals_data_all |> 
-  filter(season_name %in% c("2022", "2023")) |> 
-  mutate(fifteen_plus_disposals = disposals >= 25)
 
 ```
+

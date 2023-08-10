@@ -287,6 +287,7 @@ bind_rows(all_defender_scores,
 ## Best Scores by Position
 
 ### Defenders
+
 ```{r}
 all_defender_scores |> 
   ungroup() |> 
@@ -296,6 +297,7 @@ all_defender_scores |>
 ```
 
 ### Midfielders
+
 ```{r}
 all_midfielder_scores |> 
   ungroup() |> 
@@ -305,6 +307,7 @@ all_midfielder_scores |>
 ```
 
 ### Rucks
+
 ```{r}
 all_ruck_scores |> 
   ungroup() |> 
@@ -314,6 +317,7 @@ all_ruck_scores |>
 ```
 
 ### Forwards
+
 ```{r}
 all_forward_scores |> 
   ungroup() |> 
@@ -325,6 +329,7 @@ all_forward_scores |>
 ## Worst Scores by Position
 
 ### Defenders
+
 ```{r}
 all_defender_scores |> 
   ungroup() |> 
@@ -335,6 +340,7 @@ all_defender_scores |>
 ```
 
 ### Midfielders
+
 ```{r}
 all_midfielder_scores |> 
   ungroup() |> 
@@ -344,6 +350,7 @@ all_midfielder_scores |>
 ```
 
 ### Rucks
+
 ```{r}
 all_ruck_scores |>
   ungroup() |>
@@ -360,6 +367,7 @@ all_ruck_scores |>
 ```
 
 ### Forwards
+
 ```{r}
 all_forward_scores |> 
   ungroup() |> 
@@ -385,6 +393,7 @@ bench |>
 ```
 
 ## Tonnes by Team
+
 ```{r}
 bind_rows(all_defender_scores,
           all_midfielder_scores,
@@ -398,6 +407,7 @@ bind_rows(all_defender_scores,
 ```
 
 ## 50s or Worse by Team
+
 ```{r}
 bind_rows(all_defender_scores,
           all_midfielder_scores,
@@ -411,6 +421,7 @@ bind_rows(all_defender_scores,
 ```
 
 ## Average Age Of Fielded Players
+
 ```{r}
 # Avg player ages
 bind_rows(all_defender_scores,
@@ -425,6 +436,3 @@ bind_rows(all_defender_scores,
   summarise(`Avg Age` = round(mean(player_age), digits = 2)) |> 
   arrange(desc(`Avg Age`))
 ```
-
-
-
