@@ -70,4 +70,4 @@ afl_fantasy_data$round <-
 #===============================================================================
 
 afl_fantasy_data |> 
-  write_rds("Modelling/afl_fantasy_data_all.rds")
+  write_rds("Modelling/Position-Clustering/afl_fantasy_data_all.rds")
