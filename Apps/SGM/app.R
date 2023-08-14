@@ -242,7 +242,6 @@ ui <- fluidPage(
   )
 )
 
-
 ##%######################################################%##
 #                                                          #
 ####                       Server                       ####
@@ -312,7 +311,7 @@ server <- function(input, output, session) {
     
     # populate DTOutput
     output$all_selected_combinations <- renderDT({
-      datatable(combo_df)
+      datatable(combo_df, extensions = "Buttons", options = list(buttons = c('copy', 'csv', 'excel')))
     })
   })
   

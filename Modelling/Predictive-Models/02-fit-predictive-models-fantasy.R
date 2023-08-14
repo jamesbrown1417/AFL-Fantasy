@@ -297,10 +297,10 @@ mod_3 <- brm(
     home_game +
     margin*dvp +
     last_3_avg*last_7_avg +
-    last_7_min +
-    last_7_max +
-    last_7_var +
-    season_avg, 
+    rcs(last_7_min, 3) +
+    rcs(last_7_max, 3) +
+    rcs(last_7_var, 3) +
+    rcs(season_avg, 3), 
   family = gaussian(link = "identity"),
   data = current_round_training_data,
   control = list(max_treedepth = 15),
@@ -356,7 +356,7 @@ uri <- Sys.getenv("mongodb_connection_string")
 
 fantasy_con <- mongo(collection = "Fantasy", db = "Odds", url = uri)
 
-fantasy <- fantasy_con$find('{}') |> tibble() |> distinct(player_name, fantasy_points, .keep_all = TRUE)
+fantasy <- fantasy_con$find('{}') |> tibble() |> distinct(player_name, fantasy_points, agency, .keep_all = TRUE)
 
 # Compare with predictions------------------------------------------------------
 pred_70 <-
@@ -397,7 +397,7 @@ predicted_lines <- bind_rows(pred_70, pred_80, pred_90, pred_100, pred_110, pred
 # Get comparisons
 fantasy_comparisons <-
 fantasy |>
-  filter(agency %in% c("Pointsbet", "Betright")) |>
+  filter(agency %in% c("Pointsbet", "Betright", "TopSport")) |>
   left_join(predicted_lines) |>
   select(match, agency, player_name, fantasy_points, over_price, over_implied_probability, over_predicted_probability) |>
   mutate(diff = over_predicted_probability - over_implied_probability) |>

@@ -8,12 +8,15 @@ library(cluster)
 library(factoextra)
 
 # Get player stats data from different sources
-afl_stats_2023 <- fetch_player_stats_afl(season = 2023)
-# fryzigg_stats_2023 <- fetch_player_stats_fryzigg(season = 2023)
+afl_stats_2021 <- fetch_player_stats_afl(season =  2021)
+afl_stats_2022 <- fetch_player_stats_afl(season =  2022)
+afl_stats_2023 <- fetch_player_stats_afl(season =  2023)
 
-# Using fryzigg stats for now, select the variables deemed relevant
+afl_stats_all <- bind_rows(afl_stats_2021, afl_stats_2022, afl_stats_2023)
+
+# Using AFL stats for now, select the variables deemed relevant
 afl_stats_2023_clustering <-
-    afl_stats_2023 |>
+  afl_stats_all |>
     filter(timeOnGroundPercentage >= 60) |>
     select(
     player_first_name = player.player.player.givenName,
@@ -59,7 +62,7 @@ afl_stats_2023_clustering <-
     ) |>
     mutate(player_name = paste(player_first_name, player_last_name, sep = " ")) |>
     select(-player_first_name, -player_last_name) |>
-    relocate(player_name, .before = )
+    relocate(player_name, .before = kicks)
 
 # Normalise the predictors
 afl_stats <-
@@ -68,10 +71,12 @@ afl_stats <-
 
 # Get match details for stats table
 match_details <-
-afl_stats_2023 |>
+  afl_stats_all |>
+    mutate(season = year(utcStartTime)) |>
     filter(timeOnGroundPercentage >= 60) |>
     select(home_team = home.team.name,
      away_team = away.team.name,
+     season,
      round = round.roundNumber
       ) |>
       mutate(round = as.integer(round))
@@ -115,6 +120,7 @@ rename(position = `afl_positions$cluster`)
 cluster_1 <-
 afl_positions.df |>
 filter(position == 1) |>
+filter(season == 2023) |> 
 filter(round == 21) |>
 distinct(player_name)
 
@@ -122,6 +128,7 @@ distinct(player_name)
 cluster_2 <-
 afl_positions.df |>
 filter(position == 2) |>
+filter(season == 2023) |> 
 filter(round == 21) |>
 distinct(player_name)
 
@@ -129,6 +136,7 @@ distinct(player_name)
 cluster_3 <-
   afl_positions.df |>
   filter(position == 3) |>
+  filter(season == 2023) |> 
   filter(round == 21) |>
   distinct(player_name)
 
@@ -136,6 +144,7 @@ cluster_3 <-
 cluster_4 <-
   afl_positions.df |>
   filter(position == 4) |>
+  filter(season == 2023) |> 
   filter(round == 21) |>
   distinct(player_name)
 
@@ -143,6 +152,7 @@ cluster_4 <-
 cluster_5 <-
   afl_positions.df |>
   filter(position == 5) |>
+  filter(season == 2023) |> 
   filter(round == 21) |>
   distinct(player_name)
 
@@ -150,6 +160,7 @@ cluster_5 <-
 cluster_6 <-
   afl_positions.df |>
   filter(position == 6) |>
+  filter(season == 2023) |> 
   filter(round == 21) |>
   distinct(player_name)
 
@@ -157,6 +168,7 @@ cluster_6 <-
 cluster_7 <-
   afl_positions.df |>
   filter(position == 7) |>
+  filter(season == 2023) |> 
   filter(round == 21) |>
   distinct(player_name)
 
@@ -164,13 +176,13 @@ cluster_7 <-
 afl_positions.df <-
   afl_positions.df |>
   mutate(position_name = case_when(
-    position == 1 ~ "Key FWD",
-    position == 2 ~ "Gen DEF",
-    position == 3 ~ "Key DEF",
+    position == 1 ~ "Inside MID",
+    position == 2 ~ "Key DEF",
+    position == 3 ~ "Outside MID",
     position == 4 ~ "Ruck",
-    position == 5 ~ "Outside MID",
-    position == 6 ~ "Inside MID",
-    position == 7 ~ "Gen FWD"
+    position == 5 ~ "Gen FWD",
+    position == 6 ~ "Gen DEF",
+    position == 7 ~ "Key FWD"
   ))
 
 # Output to data folder
