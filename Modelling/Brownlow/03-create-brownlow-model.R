@@ -50,7 +50,9 @@ pred_model <-
       one_percenters +
       pressure_acts +
       inside_fifties +
-      rebounds,
+      rebounds +
+      margin +
+      supercoach,
     data = training,
     Hess = TRUE
   )
@@ -65,9 +67,21 @@ test_predictions <-
   bind_cols(predicted_probabilities) |>
   mutate(expected_votes = 1*`1` + 2*`2` + 3*`3`) |>
   group_by(match, Round) |>
+  filter(!is.na(expected_votes)) |> 
   mutate(expected_votes_normalised = expected_votes / sum(expected_votes)) |>
   arrange(start_time, match, desc(expected_votes)) |>
   ungroup()
+
+# Get most likely vote count
+most_likely_vote_count <-
+test_predictions |>
+  arrange(start_time, match, Round, expected_votes) |> 
+  group_by(match, Round) |> 
+  slice_tail( n = 3) |> 
+  mutate(predicted_votes = row_number()) |> 
+  group_by(player_name) |> 
+  summarise(total_votes = sum(predicted_votes)) |> 
+  arrange(desc(total_votes))
 
 # Function to get 3, 2 and 1 votes from each match
 get_votes <- function(match_name, round) {
@@ -113,6 +127,16 @@ avg_preds <-
             `25th percentile` = quantile(vote_tally, 0.25),
             `75th percentile` = quantile(vote_tally, 0.75)) |>
   arrange(desc(mean))
+
+result <-
+  map(empty_list, ~ .x |>
+        arrange(desc(vote_tally)) |>
+        slice_head(n = 1)) |>
+  bind_rows() |>
+  group_by(player_name) |>
+  tally() |> 
+  arrange(desc(n)) |> 
+  mutate(n = n / sum(n))
 
 # Get by team probability-------------------------------------------------------
 
