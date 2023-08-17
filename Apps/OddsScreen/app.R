@@ -82,12 +82,12 @@ player_positions <- readr::read_rds("../../Data/afl_clustering_positions.rds")
 # Get most played position to use as player's position
 player_positions <-
 player_positions |>
-    group_by(player_name, position_name) |>
+    group_by(player_name, position) |>
     tally() |>
     arrange(player_name, desc(n)) |>
     slice_head(n = 1) |>
     ungroup() |>
-    select(player_name, position = position_name) |>
+    select(player_name, position) |>
     left_join(player_teams) |>
     relocate(player_team, .after = player_name) |>
     rename(Pos = position)

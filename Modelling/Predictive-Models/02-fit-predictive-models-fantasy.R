@@ -1,7 +1,6 @@
 ##%######################################################%##
 #                                                          #
-####         Fit Poisson and negative binomial          ####
-####          models to model player Fantasy            ####
+####        Fit models to player fantasy scores         ####
 #                                                          #
 ##%######################################################%##
 
@@ -9,77 +8,35 @@
 # Libraries
 #===============================================================================
 
-library(MASS)
-library(rms)
 library(brms)
+library(rstanarm)
 library(tidyverse)
 library(mongolite)
+library(glmnet)
+
+options(mc.cores = parallel::detectCores())
 
 #===============================================================================
 # Read in Training, Target and Test Data
 #===============================================================================
 
-training <- read_rds("Modelling/Predictive-Models/training_data.rds")
-test <- read_rds("Modelling/Predictive-Models/test_data.rds")
-target <- read_rds("Modelling/Predictive-Models/target_data.rds")
+training <- read_rds("Modelling/Predictive-Models/Data/training_data_fantasy.rds")
+test <- read_rds("Modelling/Predictive-Models/Data/test_data_fantasy.rds")
+target <- read_rds("Modelling/Predictive-Models/Data/target_data_fantasy.rds")
 
-#===============================================================================
-# Prepare data for model fitting
-#===============================================================================
+# Remove duplicate players------------------------------------------------------
 
-# Arrange in order
-training <-
-training |>
-  arrange(player_full_name, round)
+# Get 2023 players and teams
+player_teams_2023 <-
+  training |>
+  filter(season == 2023) |>
+  transmute(id = paste(player_full_name, player_team))
 
-# Create min, max, and variance for last 3, 5, and 7 games predictors
-training <-
-  training |> 
-  rowwise() |> 
-  mutate(
-    last_7_min = min(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7)),
-    last_7_max = max(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7)),
-    last_7_var = var(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7), na.rm = TRUE)
-  ) |> 
-  ungroup()
-
-
-test <-
-  test |>
-  rowwise() |> 
-  mutate(
-    last_7_min = min(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7)),
-    last_7_max = max(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7)),
-    last_7_var = var(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7), na.rm = TRUE)
-  ) |> 
-  ungroup()
-
-#===============================================================================
-# Add last 7 min max and var variables to target
-#===============================================================================
-
+# Filter
 target <-
-  bind_rows(training, test, target) |>
-  arrange(player_full_name, round) |>
-  group_by(player_full_name, player_team) |>
-  mutate(
-    fantasy_lag_1 = lag(fantasy_points),
-    fantasy_lag_2 = lag(fantasy_lag_1),
-    fantasy_lag_3 = lag(fantasy_lag_2),
-    fantasy_lag_4 = lag(fantasy_lag_3),
-    fantasy_lag_5 = lag(fantasy_lag_4),
-    fantasy_lag_6 = lag(fantasy_lag_5),
-    fantasy_lag_7 = lag(fantasy_lag_6)
-  ) |>
-  rowwise() |> 
-  mutate(
-    last_7_min = min(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7), na.rm = TRUE),
-    last_7_max = max(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7), na.rm = TRUE),
-    last_7_var = var(c(fantasy_lag_1, fantasy_lag_2, fantasy_lag_3, fantasy_lag_4, fantasy_lag_5, fantasy_lag_6, fantasy_lag_7), na.rm = TRUE)
-  ) |> 
-  ungroup() |>
-  filter(round == max(round, na.rm = TRUE))
-  
+target |>
+  filter(paste(player_full_name, player_team) %in% player_teams_2023$id)
+
 #===============================================================================
 # Add lines data as predicted margin
 #===============================================================================
@@ -112,7 +69,6 @@ margin_data <-
 
 target <-
 target |>
-  select(player_full_name, player_team, opposition_team, round, home_game:last_7_var) |>
   left_join(margin_data)
 
 target <- target[complete.cases(target), ]
@@ -121,26 +77,26 @@ target <- target[complete.cases(target), ]
 # Standardise predictors
 #===============================================================================
 
-training <-
+training_std <-
 training |>
   mutate(home_game = factor(home_game, labels = c("No", "Yes"))) |>
   mutate(fantasy_points = as.integer(fantasy_points), margin = as.double(margin)) |>
   mutate(across(where(is.double), ~ as.numeric(scale(.x))))
 
-test <-
+test_std <-
   test |>
   mutate(home_game = factor(home_game, labels = c("No", "Yes"))) |>
   mutate(fantasy_points = as.integer(fantasy_points), margin = as.double(margin)) |>
   mutate(across(where(is.double), ~ as.numeric(scale(.x))))
 
-target <-
+target_std <-
   target |>
   mutate(home_game = factor(home_game, labels = c("No", "Yes"))) |>
   mutate(across(where(is.double), ~ as.numeric(scale(.x))))
 
 ##%######################################################%##
 #                                                          #
-####                 Fit poisson model                  ####
+####                 Fit linear model                   ####
 #                                                          #
 ##%######################################################%##
 
@@ -152,23 +108,131 @@ mod_1 <-
   glm(
     fantasy_points ~
       home_game +
-      margin*dvp +
-      last_3_avg*last_7_avg +
+      margin +
+      dvp_5 +
+      dvp_10 +
+      dvp_15 +
+      
+      percentage_over_avg_5 +
+      percentage_over_avg_10 +
+      percentage_over_avg_15 +
+      
+      last_3_avg +
+      last_3_min +
+      last_3_max +
+      last_3_variance +
+      
+      last_5_avg +
+      last_5_min +
+      last_5_max +
+      last_5_variance +
+      
+      last_7_avg +
       last_7_min +
       last_7_max +
-      last_7_var +
-      season_avg,
-    data = training
+      last_7_variance +
+      
+      last_10_avg +
+      last_10_min +
+      last_10_max +
+      last_10_variance,
+    data = training_std
   )
 
-summary(mod_1)
+# Try LASSO---------------------------------------------------------------------
+
+X <-
+  model.matrix(
+  fantasy_points ~
+    home_game +
+    margin +
+    dvp_5 +
+    dvp_10 +
+    dvp_15 +
+    
+    percentage_over_avg_5 +
+    percentage_over_avg_10 +
+    percentage_over_avg_15 +
+    
+    last_3_avg +
+    last_3_min +
+    last_3_max +
+    last_3_variance +
+    
+    last_5_avg +
+    last_5_min +
+    last_5_max +
+    last_5_variance +
+    
+    last_7_avg +
+    last_7_min +
+    last_7_max +
+    last_7_variance +
+    
+    last_10_avg +
+    last_10_min +
+    last_10_max +
+    last_10_variance,
+  data = training_std
+) 
+
+X_test <-
+  model.matrix(
+  fantasy_points ~
+    home_game +
+    margin +
+    dvp_5 +
+    dvp_10 +
+    dvp_15 +
+    
+    percentage_over_avg_5 +
+    percentage_over_avg_10 +
+    percentage_over_avg_15 +
+    
+    last_3_avg +
+    last_3_min +
+    last_3_max +
+    last_3_variance +
+    
+    last_5_avg +
+    last_5_min +
+    last_5_max +
+    last_5_variance +
+    
+    last_7_avg +
+    last_7_min +
+    last_7_max +
+    last_7_variance +
+    
+    last_10_avg +
+    last_10_min +
+    last_10_max +
+    last_10_variance,
+  data = test_std
+) 
+
+X <- X[,-1]
+
+X_test <- X_test[,-1]
+
+Y <- training_std$fantasy_points
+
+set.seed(123) # for reproducibility
+cv.fit <- cv.glmnet(X, Y, alpha = 1) # alpha = 1 indicates Lasso regression
+
+best_lambda <- cv.fit$lambda.min
+mod_2 <- glmnet(X, Y, alpha = 1, lambda = best_lambda)
 
 #===============================================================================
 # Get predictions on the training data
 #===============================================================================
 
+#===============================================================================
+# Linear Model
+#===============================================================================
+
 # Predictions col
-predictions <- predict(mod_1, newdata = test)
+predictions <- predict(mod_1, newdata = test_std)
 
 # Bind to test data
 test_predictions_1 <- test
@@ -176,9 +240,30 @@ test_predictions_1$predicted_fantasy = predictions
 
 # Get squared error
 test_predictions_1$squared_error <- (test_predictions_1$fantasy_points - test_predictions_1$predicted_fantasy)^2
+test_predictions_1$absolute_error <- abs(test_predictions_1$fantasy_points - test_predictions_1$predicted_fantasy)
 
 # Get MSE
 MSE_1 <- mean(test_predictions_1$squared_error)
+MAE_1 <- mean(test_predictions_1$absolute_error)
+
+#===============================================================================
+# Lasso
+#===============================================================================
+
+# Predictions col
+predictions <- predict(mod_2, newx = X_test)
+
+# Bind to test data
+test_predictions_2 <- test
+test_predictions_2$predicted_fantasy = predictions
+
+# Get squared error
+test_predictions_2$squared_error <- (test_predictions_2$fantasy_points - test_predictions_2$predicted_fantasy)^2
+test_predictions_2$absolute_error <- abs(test_predictions_2$fantasy_points - test_predictions_2$predicted_fantasy)
+
+# Get MSE
+MSE_2 <- mean(test_predictions_2$squared_error)
+MAE_2 <- mean(test_predictions_2$absolute_error)
 
 ##%######################################################%##
 #                                                          #
@@ -187,73 +272,67 @@ MSE_1 <- mean(test_predictions_1$squared_error)
 ##%######################################################%##
 
 # Calculate log of the mean of fantasy_points for an intercept prior
-log(mean(training$fantasy_points))
+mean(training$fantasy_points)
 
-# Fit the bayesian Poisson model
-mod_2 <- brm(
-  fantasy_points ~
-    home_game +
-    margin*dvp +
-    last_3_avg*last_7_avg +
-    last_7_min +
-    last_7_max +
-    last_7_var +
-    season_avg, 
-  family = gaussian(link = "identity"),
-  data = training,
+# Fit the bayesian linear model using RStanarm
+mod_3 <-
+  stan_glm(
+    fantasy_points ~
+      home_game +
+      margin +
+      dvp_5 +
+      dvp_10 +
+      dvp_15 +
+      
+      percentage_over_avg_5 +
+      percentage_over_avg_10 +
+      percentage_over_avg_15 +
+      
+      last_3_avg +
+      last_3_min +
+      last_3_max +
+      last_3_variance +
+      
+      last_5_avg +
+      last_5_min +
+      last_5_max +
+      last_5_variance +
+      
+      last_7_avg +
+      last_7_min +
+      last_7_max +
+      last_7_variance +
+      
+      last_10_avg +
+      last_10_min +
+      last_10_max +
+      last_10_variance,
+    family = gaussian(link = "identity"),
+    data = training,
   control = list(max_treedepth = 15),
   iter = 5000,
-  warmup = 2500,
-  prior = c(
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "dvp"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "home_gameYes"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_3_avg"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_3_avg:last_7_avg"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_avg"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_max"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_min"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_var"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "margin"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "margin:dvp"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "season_avg"),
-    set_prior("student_t(3, 70, 3)", class = "Intercept")
-  )
-)
+  warmup = 2500)
 
 # Generate Samples
-pp_samples_2 <- posterior_predict(mod_2, newdata = test, ndraws = 10000)
+pp_samples_3 <- posterior_predict(mod_3, newdata = test, ndraws = 10000)
 
 # Get means
-pp_means_2 <- apply(pp_samples_2, 2, mean)
+pp_means_3 <- apply(pp_samples_3, 2, mean)
 
 # Add to test
-test_predictions_2 <- test
-test_predictions_2$predicted_fantasy = pp_means_2
+test_predictions_3 <- test
+test_predictions_3$predicted_fantasy = pp_means_3
 
 # Get squared error
-test_predictions_2$squared_error <- (test_predictions_2$fantasy_points - test_predictions_2$predicted_fantasy)^2
-test_predictions_2$absolute_error <- abs(test_predictions_2$fantasy_points - test_predictions_2$predicted_fantasy)
-
-# Get probability of scoring over 100
-prob_100_or_greater <- apply(pp_samples_2, 2, function(x) mean(x >= 100))
-
-# Get probability of scoring over 110
-prob_110_or_greater <- apply(pp_samples_2, 2, function(x) mean(x >= 110))
-
-# Get probability of scoring over 150
-prob_150_or_greater <- apply(pp_samples_2, 2, function(x) mean(x >= 150))
-
-# Add to test
-test_predictions_2$prob_100_plus <- prob_100_or_greater
-test_predictions_2$prob_110_plus <- prob_110_or_greater
-test_predictions_2$prob_150_plus <- prob_150_or_greater
+test_predictions_3$squared_error <- (test_predictions_3$fantasy_points - test_predictions_3$predicted_fantasy)^2
+test_predictions_3$absolute_error <- abs(test_predictions_3$fantasy_points - test_predictions_3$predicted_fantasy)
 
 # Get MSE
-MSE_2 <- mean(test_predictions_2$squared_error)
-MAE_2 <- mean(test_predictions_2$absolute_error)
+MSE_3 <- mean(test_predictions_3$squared_error)
+MAE_3 <- mean(test_predictions_3$absolute_error)
 
 # Get lines
-pp_median_2 <- apply(pp_samples_2, 2, median)
+pp_median_3 <- apply(pp_samples_3, 2, median)
 
 # Lines-------------------------------------------------------------------------
 
@@ -270,13 +349,13 @@ round_to_nearest_half <- function(x) {
   }
 }
 
-pp_median_2 <- sapply(pp_median_2, round_to_nearest_half)
+pp_median_3 <- sapply(pp_median_3, round_to_nearest_half)
 
 # Create lines
 fantasy_lines <-
 test |>
   dplyr::select(player_full_name, player_team, opposition_team, round, fantasy_points) |>
-  bind_cols("predicted_fantasy_line" = pp_median_2) |>
+  bind_cols("predicted_fantasy_line" = pp_median_3) |>
   mutate(covered_line = fantasy_points > predicted_fantasy_line)
 
 sum(fantasy_lines$covered_line) / nrow(fantasy_lines)
@@ -288,50 +367,59 @@ sum(fantasy_lines$covered_line) / nrow(fantasy_lines)
 ##%######################################################%##
 
 # Current round training data
-current_round_training_data <- bind_rows(training, test) |>
+current_round_training_data <-
+  bind_rows(training, test) |>
   arrange(player_full_name, player_team, round)
 
 # Fit model to current round training data
-mod_3 <- brm(
-  fantasy_points ~
-    home_game +
-    margin*dvp +
-    last_3_avg*last_7_avg +
-    rcs(last_7_min, 3) +
-    rcs(last_7_max, 3) +
-    rcs(last_7_var, 3) +
-    rcs(season_avg, 3), 
-  family = gaussian(link = "identity"),
-  data = current_round_training_data,
-  control = list(max_treedepth = 15),
-  iter = 5000,
-  warmup = 2500,
-  prior = c(
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "dvp"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "home_gameYes"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_3_avg"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_3_avg:last_7_avg"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_avg"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_max"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_min"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "last_7_var"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "margin"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "margin:dvp"),
-    set_prior("student_t(5, 0, 0.8)", class = "b", coef = "season_avg"),
-    set_prior("student_t(3, 70, 3)", class = "Intercept")
-  )
-)
+mod_4 <-
+  stan_glm(
+    fantasy_points ~
+      home_game +
+      margin +
+      dvp_5 +
+      dvp_10 +
+      dvp_15 +
+      
+      percentage_over_avg_5 +
+      percentage_over_avg_10 +
+      percentage_over_avg_15 +
+      
+      last_3_avg +
+      last_3_min +
+      last_3_max +
+      last_3_variance +
+      
+      last_5_avg +
+      last_5_min +
+      last_5_max +
+      last_5_variance +
+      
+      last_7_avg +
+      last_7_min +
+      last_7_max +
+      last_7_variance +
+      
+      last_10_avg +
+      last_10_min +
+      last_10_max +
+      last_10_variance,
+    family = gaussian(link = "identity"),
+    data = current_round_training_data,
+    control = list(max_treedepth = 15),
+    iter = 5000,
+    warmup = 2500)
 
 # Generate Samples
-pp_samples_3 <- posterior_predict(mod_3, newdata = target, ndraws = 10000)
+pp_samples_4 <- posterior_predict(mod_4, newdata = target, ndraws = 10000)
 
 # Get means
-pp_means_3 <- apply(pp_samples_3, 2, mean)
+pp_means_4 <- apply(pp_samples_4, 2, mean)
 
 # Get lines
-pp_median_3 <- apply(pp_samples_3, 2, median)
+pp_median_4 <- apply(pp_samples_4, 2, median)
 
-current_round_lines <- sapply(pp_median_3, round_to_nearest_half)
+current_round_lines <- sapply(pp_median_4, round_to_nearest_half)
 
 # Create lines
 fantasy_lines_upcoming_round <-
@@ -340,12 +428,12 @@ fantasy_lines_upcoming_round <-
   bind_cols("predicted_fantasy_line" = current_round_lines)
 
 # Add to upcoming match lines
-fantasy_lines_upcoming_round$prob_70_plus <- apply(pp_samples_3, 2, function(x) mean(x >= 70))
-fantasy_lines_upcoming_round$prob_80_plus <- apply(pp_samples_3, 2, function(x) mean(x >= 80))
-fantasy_lines_upcoming_round$prob_90_plus <- apply(pp_samples_3, 2, function(x) mean(x >= 90))
-fantasy_lines_upcoming_round$prob_100_plus <- apply(pp_samples_3, 2, function(x) mean(x >= 100))
-fantasy_lines_upcoming_round$prob_110_plus <- apply(pp_samples_3, 2, function(x) mean(x >= 110))
-fantasy_lines_upcoming_round$prob_120_plus <- apply(pp_samples_3, 2, function(x) mean(x >= 120))
+fantasy_lines_upcoming_round$prob_70_plus <- apply(pp_samples_4, 2, function(x) mean(x >= 70))
+fantasy_lines_upcoming_round$prob_80_plus <- apply(pp_samples_4, 2, function(x) mean(x >= 80))
+fantasy_lines_upcoming_round$prob_90_plus <- apply(pp_samples_4, 2, function(x) mean(x >= 90))
+fantasy_lines_upcoming_round$prob_100_plus <- apply(pp_samples_4, 2, function(x) mean(x >= 100))
+fantasy_lines_upcoming_round$prob_110_plus <- apply(pp_samples_4, 2, function(x) mean(x >= 110))
+fantasy_lines_upcoming_round$prob_120_plus <- apply(pp_samples_4, 2, function(x) mean(x >= 120))
 
 #===============================================================================
 # Compare with actual odds to find biggest differences
@@ -395,9 +483,9 @@ pred_120 <-
 predicted_lines <- bind_rows(pred_70, pred_80, pred_90, pred_100, pred_110, pred_120)
 
 # Get comparisons
-fantasy_comparisons <-
+fantasy_comparisons_neds <-
 fantasy |>
-  filter(agency %in% c("Pointsbet", "Betright", "TopSport")) |>
+  filter(agency %in% c("Neds")) |>
   left_join(predicted_lines) |>
   select(match, agency, player_name, fantasy_points, over_price, over_implied_probability, over_predicted_probability) |>
   mutate(diff = over_predicted_probability - over_implied_probability) |>
@@ -422,3 +510,10 @@ fantasy_lines_upcoming_round |>
   select(match, player_name, pointsbet_line, predicted_fantasy_line) |>
   mutate(diff = predicted_fantasy_line - pointsbet_line) |>
   filter(!is.na(diff))
+
+#===============================================================================
+# Output upcoming weeks to model testing to assess performance
+#===============================================================================
+
+fantasy_comparisons_neds |> 
+  write_rds("Modelling/Predictive-Models/model_testing/neds_fantasy_round_23_2023.rds")

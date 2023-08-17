@@ -6,6 +6,7 @@ library(fitzRoy)
 library(umap)
 library(cluster)
 library(factoextra)
+library(dbscan)
 
 # Get player stats data from different sources
 afl_stats_2021 <- fetch_player_stats_afl(season =  2021)
@@ -81,32 +82,49 @@ match_details <-
       ) |>
       mutate(round = as.integer(round))
 
-#===============================================================================
-# Create umap object
-#===============================================================================
-
-# Create labels and dataframe
+# # Create labels and dataframe
 afl_stats.data <- as.data.frame(afl_stats[, -1])
 afl_stats.labels <- as.data.frame(afl_stats[, 1])
 
-# Perform UMAP
-afl_stats.umap <- umap(afl_stats.data, n_neighbors = 15, n_components = 5, metric = "euclidean", min_dist = 0.1, spread = 1)
-
-# Get the UMAP coordinates
-afl_stats.umap.coords <- as.data.frame(afl_stats.umap$layout)
 
 #===============================================================================
-# Perform K-means clustering to get 8 clusters
+# Create umap object - possible problems with umap -> clustering (leave for now)
 #===============================================================================
 
-# Determine optimal number of clusters
-# fviz_nbclust(afl_stats.umap.coords, kmeans, method = "wss")
-# fviz_nbclust(afl_stats.umap.coords, kmeans, method = "silhouette")
+# # Perform UMAP
+# afl_stats.umap <- umap(afl_stats.data, n_neighbors = 30, n_components = 4, metric = "euclidean", min_dist = 0.001, spread = 1)
+# 
+# # Get the UMAP coordinates
+# afl_stats.umap.coords <- as.data.frame(afl_stats.umap$layout)
 
-# Above we see ~7 is the optimal number of clusters
+#===============================================================================
+# Dimensionality reduction using PCA
+#===============================================================================
+
+# Get numeric matrix
+afl_stats_matrix <- 
+  afl_stats |>
+  select(-player_name) |>
+  as.matrix()
+
+# Perform PCA
+pca_result <- prcomp(afl_stats_matrix)
+
+# Get PCA Scores
+pc_scores <- pca_result$x
+
+# Decide how many to keep
+plot(pca_result$sdev^2, type='b', xlab="Component", ylab="Eigenvalue") # Keep 8 PCs
+
+# Get retained PCA Scores
+pc_scores_retained <- pc_scores[,1:5]
+
+#===============================================================================
+# Perform K-means clustering to get clusters
+#===============================================================================
 
 # Perform K-means clustering on optimal clusters
-afl_positions <- kmeans(afl_stats.umap.coords, centers = 7, nstart = 25)
+afl_positions <- kmeans(pc_scores_retained, centers = 7, nstart = 35)
 
 # Get dataset of labels and clusters
 afl_positions.df <- as_tibble(cbind(afl_stats.labels, afl_positions$cluster, match_details)) |>
@@ -121,7 +139,7 @@ cluster_1 <-
 afl_positions.df |>
 filter(position == 1) |>
 filter(season == 2023) |> 
-filter(round == 21) |>
+filter(round == 22) |>
 distinct(player_name)
 
 # Cluster 2
@@ -129,7 +147,7 @@ cluster_2 <-
 afl_positions.df |>
 filter(position == 2) |>
 filter(season == 2023) |> 
-filter(round == 21) |>
+filter(round == 22) |>
 distinct(player_name)
 
 # Cluster 3
@@ -137,7 +155,7 @@ cluster_3 <-
   afl_positions.df |>
   filter(position == 3) |>
   filter(season == 2023) |> 
-  filter(round == 21) |>
+  filter(round == 22) |>
   distinct(player_name)
 
 # Cluster 4
@@ -145,7 +163,7 @@ cluster_4 <-
   afl_positions.df |>
   filter(position == 4) |>
   filter(season == 2023) |> 
-  filter(round == 21) |>
+  filter(round == 22) |>
   distinct(player_name)
 
 # Cluster 5
@@ -153,7 +171,7 @@ cluster_5 <-
   afl_positions.df |>
   filter(position == 5) |>
   filter(season == 2023) |> 
-  filter(round == 21) |>
+  filter(round == 22) |>
   distinct(player_name)
 
 # Cluster 6
@@ -161,7 +179,7 @@ cluster_6 <-
   afl_positions.df |>
   filter(position == 6) |>
   filter(season == 2023) |> 
-  filter(round == 21) |>
+  filter(round == 22) |>
   distinct(player_name)
 
 # Cluster 7
@@ -169,23 +187,9 @@ cluster_7 <-
   afl_positions.df |>
   filter(position == 7) |>
   filter(season == 2023) |> 
-  filter(round == 21) |>
+  filter(round == 22) |>
   distinct(player_name)
-
-# Add cluster names to dataframe
-afl_positions.df <-
-  afl_positions.df |>
-  mutate(position_name = case_when(
-    position == 1 ~ "Inside MID",
-    position == 2 ~ "Key DEF",
-    position == 3 ~ "Outside MID",
-    position == 4 ~ "Ruck",
-    position == 5 ~ "Gen FWD",
-    position == 6 ~ "Gen DEF",
-    position == 7 ~ "Key FWD"
-  ))
 
 # Output to data folder
 afl_positions.df |> 
-relocate(position, .before = position_name) |>
   write_rds("Data/afl_clustering_positions.rds")

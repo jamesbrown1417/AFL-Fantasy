@@ -1,7 +1,5 @@
 # Libraries and functions
 library(tidyverse)
-library(qreport)
-library(kableExtra)
 library(fitzRoy)
 
 `%notin%` <- Negate(`%in%`)
@@ -16,7 +14,7 @@ current_season_data <- get_fantasy_data(season = Sys.Date() |> year())
 positions <-
  read_rds("Data/afl_clustering_positions.rds") |>
  mutate(round = paste("Round", round)) |>
- select(player_name, round, position, position_name)
+ select(player_name, round, position)
 
 # Join with position data
 current_season_data <-
@@ -69,9 +67,9 @@ current_season_data |>
 # Get list of positions
 position_list <-
 current_season_data |>
-  distinct(position_name) |>
-  filter(!is.na(position_name)) |> 
-  pull(position_name)
+  distinct(position) |>
+  filter(!is.na(position)) |> 
+  pull(position)
 
 # Function to get difference between average vs all other teams vs score vs team
 get_dvp <- function(opp_team, pos, n_rounds) {
@@ -87,7 +85,7 @@ get_dvp <- function(opp_team, pos, n_rounds) {
   data <-
     current_season_data |>
     filter(round %in% rounds_list$round) |>
-    filter(position_name == pos)
+    filter(position == pos)
   
   # Avg vs all other sides
   vs_others <-
@@ -141,7 +139,7 @@ get_dvp_disposals <- function(opp_team, pos, n_rounds) {
   data <-
     current_season_data |>
     filter(round %in% rounds_list$round) |>
-    filter(position_name == pos)
+    filter(position == pos)
   
   # Avg vs all other sides
   vs_others <-

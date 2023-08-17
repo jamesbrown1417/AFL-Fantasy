@@ -64,7 +64,7 @@ all_data$round <-
 positions <-
   read_rds("Data/afl_clustering_positions.rds") |>
   mutate(round = paste("Round", round)) |>
-  select(player_name, season, round, position, position_name)
+  select(player_name, season, round, position, position)
 
 # Make round number an ordered factor
 positions$round <-
@@ -175,9 +175,9 @@ team_list <-
 # Get list of positions
 position_list <-
   current_data |>
-  distinct(position_name) |>
-  filter(!is.na(position_name)) |> 
-  pull(position_name)
+  distinct(position) |>
+  filter(!is.na(position)) |> 
+  pull(position)
 
 # Function to get difference between average vs all other teams vs score vs team
 get_dvp <- function(opp_team, pos, n_rounds) {
@@ -195,7 +195,7 @@ get_dvp <- function(opp_team, pos, n_rounds) {
     current_data |>
     mutate(round_id = paste(season_name, round)) |> 
     filter(round_id %in% rounds_list$round_id) |> 
-    filter(position_name == pos)
+    filter(position == pos)
   
   # Avg vs all other sides
   vs_others <-
@@ -269,36 +269,95 @@ all_dvp <-
   all_dvp |> 
   filter(!is.nan(dvp))
 
+# Separate DVP into 5, 10 and 15 game datasets
+dvp_5 <- all_dvp |> filter(n_rounds == 5) |> rename(dvp_5 = dvp, percentage_over_avg_5 = percentage_over_avg) |> select(-n_rounds)
+dvp_10 <- all_dvp |> filter(n_rounds == 10) |> rename(dvp_10 = dvp, percentage_over_avg_10 = percentage_over_avg) |> select(-n_rounds)
+dvp_15 <- all_dvp |> filter(n_rounds == 15) |> rename(dvp_15 = dvp, percentage_over_avg_15 = percentage_over_avg) |> select(-n_rounds)
+
 ##%######################################################%##
 #                                                          #
 ####                 Get past n average                 ####
 #                                                          #
 ##%######################################################%##
 
-get_last_n_avgs <- function(input_round) {
+get_last_n_avgs <- function(input_round, input_season) {
   player_data <-
-  fantasy_2023 |> 
-    filter(round < input_round) |> 
-    arrange(player_full_name, desc(round))
+  fantasy_all |> 
+    filter(season_name <= input_season) |> 
+    filter((round < input_round & season_name == input_season) | (season_name < input_season)) |> 
+    arrange(player_full_name, desc(start_time_utc))
   
-  last_3_avg <- player_data |> group_by(player_full_name) |> filter(n() >= 3) |>  slice_head(n = 3) |>  summarise(last_3_avg = mean(fantasy_points))
-  last_5_avg <- player_data |> group_by(player_full_name) |> filter(n() >= 5) |>slice_head(n = 5) |>  summarise(last_5_avg = mean(fantasy_points))
-  last_7_avg <- player_data |> group_by(player_full_name) |> filter(n() >= 7) |>slice_head(n = 7) |>  summarise(last_7_avg = mean(fantasy_points))
-  season_avg <- player_data |> group_by(player_full_name) |> filter(n() > 7) |> summarise(season_avg = mean(fantasy_points))
+  last_3_stats <- player_data |> 
+    group_by(player_full_name) |> 
+    filter(n() >= 3) |>  
+    slice_head(n = 3) |>  
+    summarise(
+      last_3_avg = mean(fantasy_points),
+      last_3_min = min(fantasy_points),
+      last_3_max = max(fantasy_points),
+      last_3_variance = var(fantasy_points)
+    )
   
-  output <- (last_3_avg |> full_join(last_5_avg) |> full_join(last_7_avg) |> full_join(season_avg))
+  last_5_stats <- player_data |> 
+    group_by(player_full_name) |> 
+    filter(n() >= 5) |> 
+    slice_head(n = 5) |>  
+    summarise(
+      last_5_avg = mean(fantasy_points),
+      last_5_min = min(fantasy_points),
+      last_5_max = max(fantasy_points),
+      last_5_variance = var(fantasy_points)
+    )
+  
+  last_7_stats <- player_data |> 
+    group_by(player_full_name) |> 
+    filter(n() >= 7) |> 
+    slice_head(n = 7) |>  
+    summarise(
+      last_7_avg = mean(fantasy_points),
+      last_7_min = min(fantasy_points),
+      last_7_max = max(fantasy_points),
+      last_7_variance = var(fantasy_points)
+    )
+  
+  last_10_stats <- player_data |> 
+    group_by(player_full_name) |> 
+    filter(n() >= 10) |> 
+    slice_head(n = 10) |>  
+    summarise(
+      last_10_avg = mean(fantasy_points),
+      last_10_min = min(fantasy_points),
+      last_10_max = max(fantasy_points),
+      last_10_variance = var(fantasy_points)
+    )
+  
+  output <- (last_3_stats |> full_join(last_5_stats) |> full_join(last_7_stats) |> full_join(last_10_stats))
   output$round <- input_round
+  output$season <- input_season
   
   return(output)
 }
 
-# Apply function to each round
-averages_output <-
-  map(rounds_to_consider, get_last_n_avgs) |> 
-  bind_rows()
+# Wrap get_last_n_avgs function with safely
+safe_get_last_n_avgs <- safely(get_last_n_avgs)
 
-# Get only complete cases
-averages_output <- averages_output[complete.cases(averages_output), ]
+# Apply the safely-wrapped function to each row of the dataframe
+results <- pmap(rounds_to_consider, function(...) {
+  res <- safe_get_last_n_avgs(...)
+  if (is.null(res$error)) {
+    return(res$result)
+  } else {
+    return(NULL)
+  }
+})
+
+# Filter out NULL values and bind rows
+last_n_summaries <- bind_rows(discard(results, is.null))
+
+# Filter out all NAN
+last_n_summaries <-
+  last_n_summaries |> 
+  filter(!is.nan(last_3_avg))
 
 ##%######################################################%##
 #                                                          #
@@ -346,15 +405,16 @@ positions$round <-
   )
 
 # Function to get position
-get_position <- function(input_round) {
+get_position <- function(input_season, input_round) {
   output <-
   positions |> 
-    filter(round < input_round) |> 
+    filter(season <= input_season) |> 
+    filter((round < input_round & season == input_season) | (season < input_season)) |> 
     arrange(desc(round)) |> 
     group_by(player_name) |> 
     filter(n() >= 5) |> 
     slice_head(n = 5) |> 
-    group_by(player_name, position_name) |> 
+    group_by(player_name, position) |> 
     tally() |>
     arrange(player_name, desc(n)) |> 
     group_by(player_name) |> 
@@ -364,15 +424,31 @@ get_position <- function(input_round) {
     select(-n)
   
   output$round <- input_round
+  output$season <- input_season
   
   return(output)
 }
 
-# Apply function to each round
-positions_output <-
-  map(rounds_to_consider, get_position) |> 
-  bind_rows() |> 
-  rename(pos = position_name)
+# Wrap get_position function with safely
+safe_get_position <- safely(get_position)
+
+# Apply the safely-wrapped function to each row of the dataframe
+results <- pmap(rounds_to_consider, function(...) {
+  res <- safe_get_position(...)
+  if (is.null(res$error)) {
+    return(res$result)
+  } else {
+    return(NULL)
+  }
+})
+
+# Filter out NULL values and bind rows
+last_5_position <- bind_rows(discard(results, is.null))
+
+# Filter out all NAN
+last_5_position <-
+  last_5_position |> 
+  filter(!is.nan(position))
 
 ##%######################################################%##
 #                                                          #
@@ -388,11 +464,13 @@ positions_output <-
 training <-
 training |> 
   mutate(home_away = player_team == home_team) |> 
-  select(player_full_name, player_team, opposition_team, margin, round, contains("fantasy"), home_away) |> 
-  left_join(averages_output) |> 
-  left_join(positions_output) |> 
-  left_join(all_dvp) |> 
-  select(-n_rounds, -pos)
+  select(player_full_name, player_team, opposition_team, margin, round, season = season_name, contains("fantasy"), home_away) |> 
+  left_join(last_n_summaries) |> 
+  left_join(last_5_position) |> 
+  left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  select(-position)
 
 training <- training[complete.cases(training), ]
 
@@ -417,13 +495,16 @@ test <-
          player_team,
          opposition_team,
          round,
+         season = season_name,
          contains("fantasy"),
          home_away,
          margin) |> 
-  left_join(get_last_n_avgs(test_round)) |> 
-  left_join(get_position(test_round) |> rename(pos = position_name)) |> 
-  left_join(get_dvp_round(test_round)) |> 
-  select(-n_rounds, -pos)
+  left_join(last_n_summaries) |> 
+  left_join(last_5_position) |> 
+  left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  select(-position)
 
 test <- test[complete.cases(test), ]
 
@@ -442,13 +523,17 @@ fixture <- fitzRoy::fetch_fixture_afl()
 latest_round_1 <- 
   fixture |>
   filter(compSeason.currentRoundNumber == round.roundNumber) |> 
-  select(home_team = home.team.name, away_team = away.team.name, round = round.name) |> 
+  mutate(compSeason.name = str_extract(compSeason.name, "\\d+")) |> 
+  mutate(season = as.numeric(compSeason.name)) |> 
+  select(home_team = home.team.name, away_team = away.team.name, round = round.name, season) |> 
   mutate(player_team = home_team)
 
 latest_round_2 <- 
   fixture |>
   filter(compSeason.currentRoundNumber == round.roundNumber) |> 
-  select(home_team = home.team.name, away_team = away.team.name, round = round.name) |> 
+  mutate(compSeason.name = str_extract(compSeason.name, "\\d+")) |> 
+  mutate(season = as.numeric(compSeason.name)) |> 
+  select(home_team = home.team.name, away_team = away.team.name, round = round.name, season) |> 
   mutate(player_team = away_team)
 
 latest_round <-
@@ -457,7 +542,7 @@ latest_round <-
   rename(home_game = home_away) |> 
   mutate(home_game = as.numeric(home_game)) |> 
   mutate(opposition_team = ifelse(player_team == home_team, away_team, home_team)) |> 
-  select(player_team, opposition_team, round, home_game)
+  select(player_team, opposition_team, round, season, home_game)
 
 # Get players and player team var
 target <-
@@ -474,22 +559,37 @@ target <-
          player_team,
          opposition_team,
          round,
+         season,
          home_game) |> 
-  left_join(get_last_n_avgs(target_round)) |> 
-  left_join(get_position(target_round) |> rename(pos = position_name)) |> 
-  left_join(get_dvp_round(target_round)) |> 
-  select(-n_rounds, -pos)
+  left_join(last_n_summaries) |> 
+  left_join(last_5_position) |> 
+  left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
+  select(-position)
+
 
 target <- target[complete.cases(target), ]
+
+# Get 2023 players and teams
+player_teams_2023 <-
+  training |>
+  filter(season == 2023) |>
+  transmute(id = paste(player_full_name, player_team))
+
+# Filter
+target <-
+  target |>
+  filter(paste(player_full_name, player_team) %in% player_teams_2023$id)
 
 #===============================================================================
 # Write out as CSVs and RDS
 #===============================================================================
 
-training |> write_csv("Modelling/Predictive-Models/training_data.csv")
-test |> write_csv("Modelling/Predictive-Models/test_data.csv")
-target |> write_csv("Modelling/Predictive-Models/target_data.csv")
+training |> write_csv("Modelling/Predictive-Models/Data/training_data_fantasy.csv")
+test |> write_csv("Modelling/Predictive-Models/Data/test_data_fantasy.csv")
+target |> write_csv("Modelling/Predictive-Models/Data/target_data_fantasy.csv")
 
-training |> write_rds("Modelling/Predictive-Models/training_data.rds")
-test |> write_rds("Modelling/Predictive-Models/test_data.rds")
-target |> write_rds("Modelling/Predictive-Models/target_data.rds")
+training |> write_rds("Modelling/Predictive-Models/Data/training_data_fantasy.rds")
+test |> write_rds("Modelling/Predictive-Models/Data/test_data_fantasy.rds")
+target |> write_rds("Modelling/Predictive-Models/Data/target_data_fantasy.rds")
