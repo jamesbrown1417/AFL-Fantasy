@@ -24,6 +24,12 @@ training <- read_rds("Modelling/Predictive-Models/Data/training_data_fantasy.rds
 test <- read_rds("Modelling/Predictive-Models/Data/test_data_fantasy.rds")
 target <- read_rds("Modelling/Predictive-Models/Data/target_data_fantasy.rds")
 
+# Current round training data
+current_round_training_data <-
+  bind_rows(training, test) |>
+  arrange(player_full_name, player_team, round)
+
+
 # Remove duplicate players------------------------------------------------------
 
 # Get 2023 players and teams
@@ -93,6 +99,15 @@ target_std <-
   target |>
   mutate(home_game = factor(home_game, labels = c("No", "Yes"))) |>
   mutate(across(where(is.double), ~ as.numeric(scale(.x))))
+
+#===============================================================================
+# Create spline terms for margin
+#===============================================================================
+
+training$margin_spline <- bs(training$margin, df = 5)
+test$margin_spline <- bs(test$margin, df = 5)
+target$margin_spline <- bs(target$margin, df = 5)
+current_round_training_data$margin_spline <- bs(current_round_training_data$margin, df = 5)
 
 ##%######################################################%##
 #                                                          #
@@ -279,39 +294,20 @@ mod_3 <-
   stan_glm(
     fantasy_points ~
       home_game +
-      margin +
-      dvp_5 +
+      margin_spline +
       dvp_10 +
-      dvp_15 +
-      
-      percentage_over_avg_5 +
       percentage_over_avg_10 +
-      percentage_over_avg_15 +
-      
-      last_3_avg +
-      last_3_min +
-      last_3_max +
-      last_3_variance +
-      
-      last_5_avg +
-      last_5_min +
-      last_5_max +
-      last_5_variance +
-      
-      last_7_avg +
-      last_7_min +
-      last_7_max +
-      last_7_variance +
-      
-      last_10_avg +
-      last_10_min +
-      last_10_max +
-      last_10_variance,
+      last_3_avg*last_5_avg*last_10_avg +
+      last_5_min*last_10_min +
+      last_5_max*last_10_max +
+      last_5_variance*last_10_variance,
     family = gaussian(link = "identity"),
     data = training,
   control = list(max_treedepth = 15),
   iter = 5000,
-  warmup = 2500)
+  warmup = 2500,
+  prior = normal(0,0.1,autoscale = TRUE),
+  prior_aux = exponential(rate = 10, autoscale = TRUE))
 
 # Generate Samples
 pp_samples_3 <- posterior_predict(mod_3, newdata = test, ndraws = 10000)
@@ -366,49 +362,25 @@ sum(fantasy_lines$covered_line) / nrow(fantasy_lines)
 #                                                          #
 ##%######################################################%##
 
-# Current round training data
-current_round_training_data <-
-  bind_rows(training, test) |>
-  arrange(player_full_name, player_team, round)
-
 # Fit model to current round training data
 mod_4 <-
   stan_glm(
     fantasy_points ~
       home_game +
-      margin +
-      dvp_5 +
+      margin_spline +
       dvp_10 +
-      dvp_15 +
-      
-      percentage_over_avg_5 +
       percentage_over_avg_10 +
-      percentage_over_avg_15 +
-      
-      last_3_avg +
-      last_3_min +
-      last_3_max +
-      last_3_variance +
-      
-      last_5_avg +
-      last_5_min +
-      last_5_max +
-      last_5_variance +
-      
-      last_7_avg +
-      last_7_min +
-      last_7_max +
-      last_7_variance +
-      
-      last_10_avg +
-      last_10_min +
-      last_10_max +
-      last_10_variance,
+      last_3_avg*last_5_avg*last_10_avg +
+      last_5_min*last_10_min +
+      last_5_max*last_10_max +
+      last_5_variance*last_10_variance,
     family = gaussian(link = "identity"),
     data = current_round_training_data,
     control = list(max_treedepth = 15),
     iter = 5000,
-    warmup = 2500)
+    warmup = 2500,
+    prior = normal(0,0.1,autoscale = TRUE),
+    prior_aux = exponential(rate = 100, autoscale = TRUE))
 
 # Generate Samples
 pp_samples_4 <- posterior_predict(mod_4, newdata = target, ndraws = 10000)
@@ -491,29 +463,37 @@ fantasy |>
   mutate(diff = over_predicted_probability - over_implied_probability) |>
   arrange(desc(diff))
 
-#===============================================================================
-# Compare with pointsbet lines
-#===============================================================================
+fantasy_comparisons_pb <-
+  fantasy |>
+  filter(agency %in% c("Pointsbet")) |>
+  left_join(predicted_lines) |>
+  select(match, agency, player_name, fantasy_points, over_price, over_implied_probability, over_predicted_probability) |>
+  mutate(diff = over_predicted_probability - over_implied_probability) |>
+  arrange(desc(diff))
 
-# Pointsbet Lines
-pointsbet_fantasy_lines <-
-fantasy |>
-  filter(agency == "Pointsbet") |>
-  filter(over_price == 1.87) |>
-  select(match, player_name, pointsbet_line = fantasy_points)
+fantasy_comparisons_betright <-
+  fantasy |>
+  filter(agency %in% c("Betright")) |>
+  left_join(predicted_lines) |>
+  select(match, agency, player_name, fantasy_points, over_price, over_implied_probability, over_predicted_probability) |>
+  mutate(diff = over_predicted_probability - over_implied_probability) |>
+  arrange(desc(diff))
 
-# Compare with predicted
-pointsbet_vs_predicted_lines <-
-fantasy_lines_upcoming_round |>
-  select(player_name = player_full_name, predicted_fantasy_line) |>
-  right_join(pointsbet_fantasy_lines) |>
-  select(match, player_name, pointsbet_line, predicted_fantasy_line) |>
-  mutate(diff = predicted_fantasy_line - pointsbet_line) |>
-  filter(!is.na(diff))
+fantasy_comparisons_topsport <-
+  fantasy |>
+  filter(agency %in% c("Topsport")) |>
+  left_join(predicted_lines) |>
+  select(match, agency, player_name, fantasy_points, over_price, over_implied_probability, over_predicted_probability) |>
+  mutate(diff = over_predicted_probability - over_implied_probability) |>
+  arrange(desc(diff))
 
 #===============================================================================
 # Output upcoming weeks to model testing to assess performance
 #===============================================================================
 
-fantasy_comparisons_neds |> 
-  write_rds("Modelling/Predictive-Models/model_testing/neds_fantasy_round_23_2023.rds")
+# fantasy_comparisons_neds |> 
+#   write_rds("Modelling/Predictive-Models/model_testing/neds_fantasy_round_23_2023.rds")
+
+# fantasy_comparisons_pb |>
+#   write_rds("Modelling/Predictive-Models/model_testing/pointsbet_fantasy_round_23_2023.rds")
+

@@ -468,8 +468,7 @@ training <-
   left_join(last_5_position) |> 
   left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
   left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  select(-position)
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos"))
 
 training <- training[complete.cases(training), ]
 
@@ -478,7 +477,6 @@ training <-
   training |> 
   rename(home_game = home_away) |> 
   mutate(home_game = as.numeric(home_game))
-
 
 #===============================================================================
 # Test
@@ -502,8 +500,7 @@ test <-
   left_join(last_5_position) |> 
   left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
   left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  select(-position)
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos"))
 
 test <- test[complete.cases(test), ]
 
@@ -564,8 +561,7 @@ target <-
   left_join(last_5_position) |> 
   left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
   left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  select(-position)
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos"))
 
 
 target <- target[complete.cases(target), ]

@@ -13,6 +13,7 @@ library(rstanarm)
 library(tidyverse)
 library(mongolite)
 library(glmnet)
+library(splines)
 
 #===============================================================================
 # Read in Training, Target and Test Data
@@ -20,43 +21,12 @@ library(glmnet)
 
 training <- read_rds("Modelling/Predictive-Models/Data/training_data_disposals.rds")
 test <- read_rds("Modelling/Predictive-Models/Data/test_data_disposals.rds")
-target <- read_rds("Modelling/Predictive-Models/Data/target_data_disposals.rds")
 
 #===============================================================================
-# Add lines data as predicted margin
+# Filter to only season for faster training (comment out if want to use full data)
 #===============================================================================
 
-uri <- Sys.getenv("mongodb_connection_string")
-
-lines_con <- mongo(collection = "Lines", db = "Odds", url = uri)
-
-lines <- lines_con$find('{}') |> tibble()
-
-home_lines_data <-
-  lines |>
-  separate(match, into = c("home_team", "away_team"), sep = " v ") |>
-  select(player_team = home_team, margin = home_line)
-
-away_lines_data <-
-  lines |>
-  separate(match, into = c("home_team", "away_team"), sep = " v ") |>
-  select(player_team = away_team, margin = away_line)
-
-margin_data <-
-  bind_rows(home_lines_data, away_lines_data) |>
-  mutate(player_team = ifelse(player_team == "West Coast", "West Coast Eagles", player_team)) |>
-  mutate(player_team = ifelse(player_team == "Adelaide", "Adelaide Crows", player_team)) |>
-  mutate(player_team = ifelse(player_team == "Geelong", "Geelong Cats", player_team)) |>
-  mutate(player_team = ifelse(player_team == "Gold Coast", "Gold Coast Suns", player_team)) |>
-  mutate(player_team = ifelse(player_team == "Greater Western Sydney", "GWS Giants", player_team)) |>
-  mutate(player_team = ifelse(player_team == "Sydney", "Sydney Swans", player_team)) |>
-  mutate(margin = -1 * margin)
-
-target <-
-  target |>
-  left_join(margin_data)
-
-target <- target[complete.cases(target), ]
+training <- training |> filter(season == 2023)
 
 #===============================================================================
 # Standardise predictors
@@ -65,19 +35,26 @@ target <- target[complete.cases(target), ]
 training_std <-
   training |>
   mutate(home_game = factor(home_game, labels = c("No", "Yes"))) |>
+  mutate(position = factor(position)) |> 
   mutate(disposals = as.integer(disposals), margin = as.double(margin)) |>
   mutate(across(where(is.double), ~ as.numeric(scale(.x))))
 
 test_std <-
   test |>
   mutate(home_game = factor(home_game, labels = c("No", "Yes"))) |>
+  mutate(position = factor(position)) |> 
   mutate(disposals = as.integer(disposals), margin = as.double(margin)) |>
   mutate(across(where(is.double), ~ as.numeric(scale(.x))))
 
-target_std <-
-  target |>
-  mutate(home_game = factor(home_game, labels = c("No", "Yes"))) |>
-  mutate(across(where(is.double), ~ as.numeric(scale(.x))))
+#===============================================================================
+# Create spline terms for margin
+#===============================================================================
+
+training$margin_spline <- bs(training$margin, df = 5)
+test$margin_spline <- bs(test$margin, df = 5)
+
+training_std$margin_spline <- bs(training_std$margin, df = 5)
+test_std$margin_spline <- bs(test_std$margin, df = 5)
 
 ##%######################################################%##
 #                                                          #
@@ -93,37 +70,21 @@ mod_1 <-
   glm(
     disposals ~
       home_game +
-      margin +
-      dvp_5 +
+      margin_spline +
+
       dvp_10 +
-      dvp_15 +
-      
-      percentage_over_avg_5 +
       percentage_over_avg_10 +
-      percentage_over_avg_15 +
       
-      last_3_avg +
-      last_3_min +
-      last_3_max +
-      last_3_variance +
+      last_3_avg*last_5_avg*last_10_avg +
+      last_5_min*last_10_min +
+      last_5_max*last_10_max +
+      last_5_variance*last_10_variance,
       
-      last_5_avg +
-      last_5_min +
-      last_5_max +
-      last_5_variance +
-      
-      last_7_avg +
-      last_7_min +
-      last_7_max +
-      last_7_variance +
-      
-      last_10_avg +
-      last_10_min +
-      last_10_max +
-      last_10_variance,
     data = training_std,
     family = poisson(link = "log")
   )
+
+summary(mod_1)
 
 #===============================================================================
 # Get predictions on the training data
@@ -175,41 +136,21 @@ mod_2 <-
   stan_glm(
     disposals ~
       home_game +
-      margin +
-      dvp_5 +
+      margin_spline +
       dvp_10 +
-      dvp_15 +
-      
-      percentage_over_avg_5 +
       percentage_over_avg_10 +
-      percentage_over_avg_15 +
-      
-      last_3_avg +
-      last_3_min +
-      last_3_max +
-      last_3_variance +
-      
-      last_5_avg +
-      last_5_min +
-      last_5_max +
-      last_5_variance +
-      
-      last_7_avg +
-      last_7_min +
-      last_7_max +
-      last_7_variance +
-      
-      last_10_avg +
-      last_10_min +
-      last_10_max +
-      last_10_variance,
+      last_3_avg*last_5_avg*last_10_avg +
+      last_5_min*last_10_min +
+      last_5_max*last_10_max +
+      last_5_variance*last_10_variance,
     family = poisson(link = "log"),
     data = training,
-    control = list(max_treedepth = 15),
-    iter = 5000,
-    warmup = 2500,
+    control = list(max_treedepth = 10),
+    iter = 2000,
+    warmup = 1000,
     cores = 12,
-    prior = normal(0,1, autoscale = TRUE))
+    chains = 6,
+    prior = normal(0, 0.1, autoscale = TRUE))
 
 # Check posterior predictions vs observed data
 pp_check(mod_2)
@@ -225,10 +166,19 @@ pp_check(mod_2)
 #===============================================================================
 
 # Update to neg binomial 2 model
-mod_3 <- update(mod_2, family = neg_binomial_2) 
+mod_3 <- update(mod_2, family = neg_binomial_2, prior_aux = exponential(rate = 10, autoscale = TRUE)) 
 
 # Check posterior predictions vs observed data
 pp_check(mod_3)
+
+##%######################################################%##
+#                                                          #
+####         Fit Best Model (Negative Binomial          ####
+####           at this stage) using all data            ####
+#                                                          #
+##%######################################################%##
+
+
 
 ##%######################################################%##
 #                                                          #
@@ -240,5 +190,7 @@ pp_check(mod_3)
 # Poisson Model
 save(mod_2, file = "Modelling/Predictive-Models/fitted_models/disposals_stan_poisson.RData")
 
-# Negative Binomial 2 Model
+# Negative Binomial 2 Model - Testing
 save(mod_3, file = "Modelling/Predictive-Models/fitted_models/disposals_stan_neg_binomial2.RData")
+
+# Negative Binomial 2 Model - This Round's Prediction
