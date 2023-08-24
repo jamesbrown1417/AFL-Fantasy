@@ -55,7 +55,9 @@ kelly_criterion <- function(probability, odds, bankroll, half = TRUE) {
 #===============================================================================
 
 training <- read_rds("Modelling/Predictive-Models/Data/training_data_disposals.rds")
+training <- training |> filter(season == 2023)
 test <- read_rds("Modelling/Predictive-Models/Data/test_data_disposals.rds")
+test <- bind_rows(training, test) |> filter(round %in% c("Round 22", "Round 23"))
 
 #===============================================================================
 # Create spline terms for margin
@@ -68,7 +70,7 @@ test$margin_spline <- bs(test$margin, df = 5)
 # Read in historic market prices
 #===============================================================================
 
-# Round 22
+# Round 22----------------------------------------------------------------------
 opening_lines_disposals_round_22 <- read_csv("Modelling/Predictive-Models/model_testing/opening_lines_disposals_round_22.csv")
 closing_lines_disposals_round_22 <- read_csv("Modelling/Predictive-Models/model_testing/closing_lines_disposals_round_22.csv")
 
@@ -77,11 +79,38 @@ players_to_ignore <- c("Clayton Oliver", "Jamaine Jones", "Ben Keays", "Jaeger O
 
 opening_lines_disposals_round_22 <-
   opening_lines_disposals_round_22 |> 
-  filter(player_name %notin% players_to_ignore)
+  filter(player_name %notin% players_to_ignore) |> 
+  mutate(round = "Round 22") |> 
+  relocate(round, .after = player_name)
 
 closing_lines_disposals_round_22 <-
   closing_lines_disposals_round_22 |> 
-  filter(player_name %notin% players_to_ignore)
+  filter(player_name %notin% players_to_ignore) |> 
+  mutate(round = "Round 22") |> 
+  relocate(round, .after = player_name)
+
+# Round 23----------------------------------------------------------------------
+opening_lines_disposals_round_23 <- read_csv("Modelling/Predictive-Models/model_testing/opening_lines_disposals_round_23.csv")
+closing_lines_disposals_round_23 <- read_csv("Modelling/Predictive-Models/model_testing/closing_lines_disposals_round_23.csv")
+
+# Ignore certain players (i.e. role change or just come back from injury)
+players_to_ignore <- c("Jamaine Jones", "Ben Keays", "Jaeger O'Meara")
+
+opening_lines_disposals_round_23 <-
+  opening_lines_disposals_round_23 |> 
+  filter(player_name %notin% players_to_ignore) |> 
+  mutate(round = "Round 23") |> 
+  relocate(round, .after = player_name)
+
+closing_lines_disposals_round_23 <-
+  closing_lines_disposals_round_23 |> 
+  filter(player_name %notin% players_to_ignore) |> 
+  mutate(round = "Round 23") |> 
+  relocate(round, .after = player_name)
+
+# Combine-----------------------------------------------------------------------
+opening_lines_disposals_all <- bind_rows(opening_lines_disposals_round_22, opening_lines_disposals_round_23)
+closing_lines_disposals_all <- bind_rows(closing_lines_disposals_round_22, closing_lines_disposals_round_23)
 
 #===============================================================================
 # Load Models
@@ -132,6 +161,7 @@ test_predictions_3 <-
     player_full_name,
     player_team,
     opposition_team,
+    round,
     margin,
     round,
     season,
@@ -153,6 +183,7 @@ test_predictions_3$prob_35_plus <- apply(pp_samples_3, 2, function(x) mean(x >= 
 pred_15_nb <-
   test_predictions_3 |>
   transmute(player_name = player_full_name,
+            round,
             number_of_disposals = "15+",
             predicted_probability = prob_15_plus,
             observed_disposals = disposals,
@@ -161,6 +192,7 @@ pred_15_nb <-
 pred_20_nb <-
   test_predictions_3 |>
   transmute(player_name = player_full_name,
+            round,
             number_of_disposals = "20+",
             predicted_probability = prob_20_plus,
             observed_disposals = disposals,
@@ -169,6 +201,7 @@ pred_20_nb <-
 pred_25_nb <-
   test_predictions_3 |>
   transmute(player_name = player_full_name,
+            round,
             number_of_disposals = "25+",
             predicted_probability = prob_25_plus,
             observed_disposals = disposals,
@@ -177,6 +210,7 @@ pred_25_nb <-
 pred_30_nb <-
   test_predictions_3 |>
   transmute(player_name = player_full_name,
+            round,
             number_of_disposals = "30+",
             predicted_probability = prob_30_plus,
             observed_disposals = disposals,
@@ -185,6 +219,7 @@ pred_30_nb <-
 pred_35_nb <-
   test_predictions_3 |>
   transmute(player_name = player_full_name,
+            round,
             number_of_disposals = "35+",
             predicted_probability = prob_35_plus,
             observed_disposals = disposals,
@@ -200,7 +235,7 @@ predicted_probs_nb <-
 #============================#
 
 negative_binomial_vs_closing_lines <-
-closing_lines_disposals_round_22 |> 
+closing_lines_disposals_all |> 
   left_join(predicted_probs_nb) |> 
   mutate(implied_probability = 1/price) |> 
   relocate(implied_probability, .before = predicted_probability) |> 
@@ -212,10 +247,10 @@ closing_lines_disposals_round_22 |>
 # Compare with the best lines for each market
 neg_binomial_closing_lines_best_markets <-
   negative_binomial_vs_closing_lines |> 
-  group_by(player_name, number_of_disposals) |> 
+  group_by(player_name, number_of_disposals, round) |> 
   filter(price == max(price)) |> 
   ungroup() |> 
-  distinct(player_name, number_of_disposals, .keep_all = TRUE)
+  distinct(player_name, number_of_disposals, round, .keep_all = TRUE)
 
 # Add Kelly Criterion Wager to DF
 neg_binomial_closing_lines_best_markets <-
@@ -235,6 +270,13 @@ neg_binomial_closing_lines_results <-
 # Get ROI
 neg_binomial_closing_lines_roi <- 
   neg_binomial_closing_lines_results |> 
+  summarise(bets_placed = n(), total_staked = sum(kelly_wager), total_profit_loss = sum(profit_loss)) |> 
+  mutate(model = "Negative Binomial", type = "Closing Lines", ROI = round(100*(total_profit_loss / total_staked), 2))
+
+# Get ROI By Round
+neg_binomial_closing_lines_by_round_roi <- 
+  neg_binomial_closing_lines_results |> 
+  group_by(round) |> 
   summarise(bets_placed = n(), total_staked = sum(kelly_wager), total_profit_loss = sum(profit_loss)) |> 
   mutate(model = "Negative Binomial", type = "Closing Lines", ROI = round(100*(total_profit_loss / total_staked), 2))
 
@@ -259,7 +301,7 @@ neg_binomial_closing_lines_roi_by_agency <-
 #============================#
 
 negative_binomial_vs_opening_lines <-
-  opening_lines_disposals_round_22 |> 
+  opening_lines_disposals_all |> 
   left_join(predicted_probs_nb) |> 
   mutate(implied_probability = 1/price) |> 
   relocate(implied_probability, .before = predicted_probability) |> 
@@ -271,10 +313,10 @@ negative_binomial_vs_opening_lines <-
 # Compare with the best lines for each market
 neg_binomial_opening_lines_best_markets <-
   negative_binomial_vs_opening_lines |> 
-  group_by(player_name, number_of_disposals) |>
+  group_by(player_name, number_of_disposals,round) |>
   filter(price == max(price)) |>
   ungroup() |>
-  distinct(player_name, number_of_disposals, .keep_all = TRUE)
+  distinct(player_name, number_of_disposals, round, .keep_all = TRUE)
 
 # Add Kelly Criterion Wager to DF
 neg_binomial_opening_lines_best_markets <-
@@ -294,6 +336,13 @@ neg_binomial_opening_lines_results <-
 # Get ROI
 neg_binomial_opening_lines_roi <- 
   neg_binomial_opening_lines_results |> 
+  summarise(bets_placed = n(), total_staked = sum(kelly_wager), total_profit_loss = sum(profit_loss)) |> 
+  mutate(model = "Negative Binomial", type = "Opening Lines", ROI = round(100*(total_profit_loss / total_staked), 2))
+
+# Get ROI By Round
+  neg_binomial_opening_lines_by_round_roi <- 
+  neg_binomial_opening_lines_results |> 
+  group_by(round) |> 
   summarise(bets_placed = n(), total_staked = sum(kelly_wager), total_profit_loss = sum(profit_loss)) |> 
   mutate(model = "Negative Binomial", type = "Opening Lines", ROI = round(100*(total_profit_loss / total_staked), 2))
 

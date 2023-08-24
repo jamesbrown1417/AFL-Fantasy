@@ -114,7 +114,7 @@ pca_result <- prcomp(afl_stats_matrix)
 pc_scores <- pca_result$x
 
 # Decide how many to keep
-plot(pca_result$sdev^2, type='b', xlab="Component", ylab="Eigenvalue") # Keep 8 PCs
+plot(pca_result$sdev^2, type='b', xlab="Component", ylab="Eigenvalue") # Keep 5 PCs
 
 # Get retained PCA Scores
 pc_scores_retained <- pc_scores[,1:5]

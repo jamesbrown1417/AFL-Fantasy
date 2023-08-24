@@ -29,6 +29,15 @@ test <- read_rds("Modelling/Predictive-Models/Data/test_data_disposals.rds")
 training <- training |> filter(season == 2023)
 
 #===============================================================================
+# Remove last 2 weeks from training and add to test
+# for model checking can remove later
+#===============================================================================
+
+test <- bind_rows(training, test) |> filter(round %in% c("Round 22", "Round 23"))
+
+training <- training |> filter(round != "Round 22")
+
+#===============================================================================
 # Standardise predictors
 #===============================================================================
 
