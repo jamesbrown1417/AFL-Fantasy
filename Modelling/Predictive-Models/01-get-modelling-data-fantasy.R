@@ -10,7 +10,6 @@ library(fitzRoy)
 # Read in required data
 #===============================================================================
 
-
 # Get helper functions
 source("Functions/data_processing_functions.r")
 
@@ -104,47 +103,47 @@ positions$round <-
   )
 
 # Use all data from 2021 onwards
-fantasy_all <-
-all_data |>
+fantasy_points_all <-
+  all_data |>
   filter(season_name %in% c("2021", "2022", "2023")) |> 
   filter(tog_percentage > 50) |> 
   mutate(season_name = as.numeric(season_name))
 
 # Make Margin Variable negative if a loss
-fantasy_all <-
-  fantasy_all |> 
+fantasy_points_all <-
+  fantasy_points_all |> 
   mutate(margin = if_else(player_team == away_team & match_result == "Home Win", -margin, margin)) |> 
   mutate(margin = if_else(player_team == home_team & match_result == "Away Win", -margin, margin)) 
 
 # Create lag variables
 # Create lag variables
-fantasy_all <- fantasy_all |>
+fantasy_points_all <- fantasy_points_all |>
   arrange(player_full_name, player_team, start_time_utc) |>
   group_by(player_full_name, player_team) |>
   mutate(
-    fantasy_lag_1 = lag(fantasy_points, 1),
-    fantasy_lag_2 = lag(fantasy_points, 2),
-    fantasy_lag_3 = lag(fantasy_points, 3),
-    fantasy_lag_4 = lag(fantasy_points, 4),
-    fantasy_lag_5 = lag(fantasy_points, 5),
-    fantasy_lag_6 = lag(fantasy_points, 6),
-    fantasy_lag_7 = lag(fantasy_points, 7),
-    fantasy_lag_8 = lag(fantasy_points, 8),
-    fantasy_lag_9 = lag(fantasy_points, 9),
-    fantasy_lag_10 = lag(fantasy_points, 10)
+    fantasy_points_lag_1 = lag(fantasy_points, 1),
+    fantasy_points_lag_2 = lag(fantasy_points, 2),
+    fantasy_points_lag_3 = lag(fantasy_points, 3),
+    fantasy_points_lag_4 = lag(fantasy_points, 4),
+    fantasy_points_lag_5 = lag(fantasy_points, 5),
+    fantasy_points_lag_6 = lag(fantasy_points, 6),
+    fantasy_points_lag_7 = lag(fantasy_points, 7),
+    fantasy_points_lag_8 = lag(fantasy_points, 8),
+    fantasy_points_lag_9 = lag(fantasy_points, 9),
+    fantasy_points_lag_10 = lag(fantasy_points, 10)
   ) |>
   ungroup()
 
 # Get max round and season
-max_round_data <- fantasy_all |> arrange(desc(start_time_utc)) |> slice_head(n = 1)
+max_round_data <- fantasy_points_all |> arrange(desc(start_time_utc)) |> slice_head(n = 1)
 
 # Create training and test splits
 training <-
-  fantasy_all |> 
+  fantasy_points_all |> 
   filter(!(season_name == max_round_data$season_name[[1]] & round == max_round_data$round[[1]]))
 
 test <-
-  fantasy_all |> 
+  fantasy_points_all |> 
   filter((season_name == max_round_data$season_name[[1]] & round == max_round_data$round[[1]]))
 
 ##%######################################################%##
@@ -155,92 +154,92 @@ test <-
 
 # Get DVP for round
 get_dvp_round <- function(input_season, input_round) {
-# Join with position data
-current_data <-
-  fantasy_all |> 
-  left_join(positions, by = c("player_full_name" = "player_name", "round" = "round", "season_name" = "season"))
-
-# Filter current data to one before input round
-current_data <-
-  current_data |> 
-  filter(season_name <= input_season) |> 
-  filter((round < input_round & season_name == input_season) | (season_name < input_season))
-
-# Get list of opposition teams
-team_list <-
-  current_data |>
-  distinct(opposition_team) |> 
-  pull(opposition_team)
-
-# Get list of positions
-position_list <-
-  current_data |>
-  distinct(position) |>
-  filter(!is.na(position)) |> 
-  pull(position)
-
-# Function to get difference between average vs all other teams vs score vs team
-get_dvp <- function(opp_team, pos, n_rounds) {
+  # Join with position data
+  current_data <-
+    fantasy_points_all |> 
+    left_join(positions, by = c("player_full_name" = "player_name", "round" = "round", "season_name" = "season"))
   
-  # Get last n rounds data
-  rounds_list <-
+  # Filter current data to one before input round
+  current_data <-
+    current_data |> 
+    filter(season_name <= input_season) |> 
+    filter((round < input_round & season_name == input_season) | (season_name < input_season))
+  
+  # Get list of opposition teams
+  team_list <-
     current_data |>
-    distinct(round, season_name) |>
-    arrange(desc(season_name), desc(round)) |>
-    slice_head(n = n_rounds) |>
-    mutate(round_id = paste(season_name, round))
+    distinct(opposition_team) |> 
+    pull(opposition_team)
   
-  # Get positional dataset
-  data <-
+  # Get list of positions
+  position_list <-
     current_data |>
-    mutate(round_id = paste(season_name, round)) |> 
-    filter(round_id %in% rounds_list$round_id) |> 
-    filter(position == pos)
+    distinct(position) |>
+    filter(!is.na(position)) |> 
+    pull(position)
   
-  # Avg vs all other sides
-  vs_others <-
-    data |>
-    filter(opposition_team != opp_team) |>
-    summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Avg vs side
-  vs_team <-
-    data |>
-    filter(opposition_team == opp_team) |>
-    summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
-  
-  # Join together
-  all_data <-
-    inner_join(vs_others, vs_team)
-  
-  # Get dvp score
-  score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
-  score = round(score, 2)
-  
-  # Get percentage scoring over their avg vs team_list
-  percentage = mean(all_data$avg_vs_team > all_data$avg_vs_others)
-  percentage = round(percentage * 100, 2)
-  
-  tibble(opposition_team = opp_team, dvp = score, percentage_over_avg = percentage)
-}
-
-# Create df of all combinations
-dvp_data <-
-  expand_grid(opp_team = team_list,
-              pos = position_list,
-              n_rounds = c(5, 10, 15))
-
-# Apply function to each combination of the dataframe columns
-dvp_output <-
-  pmap_df(.l = dvp_data, .f = get_dvp) |>
-  cbind(dvp_data[,-1])
-
-# Add round number to dvp output
-dvp_output$round <- input_round
-dvp_output$season <- input_season
-
-return(dvp_output)
+  # Function to get difference between average vs all other teams vs score vs team
+  get_dvp <- function(opp_team, pos, n_rounds) {
+    
+    # Get last n rounds data
+    rounds_list <-
+      current_data |>
+      distinct(round, season_name) |>
+      arrange(desc(season_name), desc(round)) |>
+      slice_head(n = n_rounds) |>
+      mutate(round_id = paste(season_name, round))
+    
+    # Get positional dataset
+    data <-
+      current_data |>
+      mutate(round_id = paste(season_name, round)) |> 
+      filter(round_id %in% rounds_list$round_id) |> 
+      filter(position == pos)
+    
+    # Avg vs all other sides
+    vs_others <-
+      data |>
+      filter(opposition_team != opp_team) |>
+      summarise(avg_vs_others = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
+    
+    # Avg vs side
+    vs_team <-
+      data |>
+      filter(opposition_team == opp_team) |>
+      summarise(avg_vs_team = mean(fantasy_points, na.rm = TRUE), .by = player_full_name)
+    
+    # Join together
+    all_data <-
+      inner_join(vs_others, vs_team)
+    
+    # Get dvp score
+    score = mean(all_data$avg_vs_team) - mean(all_data$avg_vs_others)
+    score = round(score, 2)
+    
+    # Get percentage scoring over their avg vs team_list
+    percentage = mean(all_data$avg_vs_team > all_data$avg_vs_others)
+    percentage = round(percentage * 100, 2)
+    
+    tibble(opposition_team = opp_team, dvp = score, percentage_over_avg = percentage)
   }
+  
+  # Create df of all combinations
+  dvp_data <-
+    expand_grid(opp_team = team_list,
+                pos = position_list,
+                n_rounds = c(5, 10, 15))
+  
+  # Apply function to each combination of the dataframe columns
+  dvp_output <-
+    pmap_df(.l = dvp_data, .f = get_dvp) |>
+    cbind(dvp_data[,-1])
+  
+  # Add round number to dvp output
+  dvp_output$round <- input_round
+  dvp_output$season <- input_season
+  
+  return(dvp_output)
+}
 
 # Get list of rounds and seasons to consider
 rounds_to_consider <-
@@ -282,7 +281,7 @@ dvp_15 <- all_dvp |> filter(n_rounds == 15) |> rename(dvp_15 = dvp, percentage_o
 
 get_last_n_avgs <- function(input_round, input_season) {
   player_data <-
-  fantasy_all |> 
+    fantasy_points_all |> 
     filter(season_name <= input_season) |> 
     filter((round < input_round & season_name == input_season) | (season_name < input_season)) |> 
     arrange(player_full_name, desc(start_time_utc))
@@ -407,7 +406,7 @@ positions$round <-
 # Function to get position
 get_position <- function(input_season, input_round) {
   output <-
-  positions |> 
+    positions |> 
     filter(season <= input_season) |> 
     filter((round < input_round & season == input_season) | (season < input_season)) |> 
     arrange(desc(round)) |> 
@@ -462,15 +461,14 @@ last_5_position <-
 #===============================================================================
 
 training <-
-training |> 
+  training |> 
   mutate(home_away = player_team == home_team) |> 
-  select(player_full_name, player_team, opposition_team, margin, round, season = season_name, contains("fantasy"), home_away) |> 
+  select(player_full_name, player_team, opposition_team, margin, round, season = season_name, contains("fantasy_points"), home_away) |> 
   left_join(last_n_summaries) |> 
   left_join(last_5_position) |> 
   left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
   left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  select(-position)
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos"))
 
 training <- training[complete.cases(training), ]
 
@@ -479,7 +477,6 @@ training <-
   training |> 
   rename(home_game = home_away) |> 
   mutate(home_game = as.numeric(home_game))
-
 
 #===============================================================================
 # Test
@@ -496,15 +493,14 @@ test <-
          opposition_team,
          round,
          season = season_name,
-         contains("fantasy"),
+         contains("fantasy_points"),
          home_away,
          margin) |> 
   left_join(last_n_summaries) |> 
   left_join(last_5_position) |> 
   left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
   left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  select(-position)
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos"))
 
 test <- test[complete.cases(test), ]
 
@@ -565,11 +561,12 @@ target <-
   left_join(last_5_position) |> 
   left_join(dvp_5, by = c("season", "round", "opposition_team", "position" = "pos")) |>
   left_join(dvp_10, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos")) |>
-  select(-position)
+  left_join(dvp_15, by = c("season", "round", "opposition_team", "position" = "pos"))
 
 
 target <- target[complete.cases(target), ]
+
+# Remove duplicate players------------------------------------------------------
 
 # Get 2023 players and teams
 player_teams_2023 <-
