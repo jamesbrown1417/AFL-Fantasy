@@ -115,4 +115,5 @@ coaches_votes_2014_2022 <-
 
 coaches_votes_2014_2023 <-
   bind_rows(coaches_votes_2014_2022, coaches_votes_2023) |>
+  mutate(player_full_name = str_remove_all(player_full_name, "\\r")) |> 
   write_rds("Modelling/Brownlow/coaches_votes_2014_to_2023.rds")

@@ -7,6 +7,9 @@
 # libraries
 library(MASS)
 library(tidyverse)
+`%notin%` = base::Negate(`%in%`)
+library(data.table)
+library(rms)
 
 # Read in data
 brownlow_analysis_data <-
@@ -16,8 +19,8 @@ brownlow_analysis_data <-
   mutate(brownlow_votes = factor(brownlow_votes, levels = c(0,1,2,3), ordered = TRUE))
 
 # Split into test and training data
-test <- brownlow_analysis_data |> filter(Season == 2023) |> select(-brownlow_votes)
-training <- brownlow_analysis_data |> filter(Season != 2023)
+test <- brownlow_analysis_data |> filter(Season == 2023)
+training <- brownlow_analysis_data |> filter(Season < 2023)
 
 ##%######################################################%##
 #                                                          #
@@ -31,8 +34,7 @@ pred_model <-
     brownlow_votes ~
       coaches_votes +
       disposal_efficiency +
-      contested_possessions +
-      uncontested_possessions +
+      contested_possessions*uncontested_possessions +
       kicks +
       handballs +
       marks +
@@ -51,8 +53,7 @@ pred_model <-
       pressure_acts +
       inside_fifties +
       rebounds +
-      margin +
-      supercoach,
+      rcs(margin, 4),
     data = training,
     Hess = TRUE
   )
@@ -63,97 +64,74 @@ predicted_probabilities <- predict(pred_model, newdata = test, type = "probs")
 # Join with test data labels
 test_predictions <-
   test |>
-  select(player_name, start_time, match, Round, coaches_votes) |>
-  bind_cols(predicted_probabilities) |>
-  mutate(expected_votes = 1*`1` + 2*`2` + 3*`3`) |>
   group_by(match, Round) |>
-  filter(!is.na(expected_votes)) |> 
-  mutate(expected_votes_normalised = expected_votes / sum(expected_votes)) |>
+  select(player_name, start_time, match, Round, contains("votes")) |>
+  bind_cols(predicted_probabilities) |>
+  filter(!is.na(`0`) & !is.na(`1`) & !is.na(`2`) & !is.na(`3`)) |> 
+  mutate(`0` = `0` / sum(`0`, na.rm = TRUE),
+         `1` = `1` / sum(`1`, na.rm = TRUE),
+         `2` = `2` / sum(`2`, na.rm = TRUE),
+         `3` = `3` / sum(`3`, na.rm = TRUE)) |>
+  mutate(expected_votes = 0*`0` + 1*`1` + 2*`2` + 3*`3`) |>
   arrange(start_time, match, desc(expected_votes)) |>
+  slice_head(n = 10) |> 
+  mutate(expected_votes = expected_votes * (6/sum(expected_votes))) |> 
   ungroup()
 
-# Get most likely vote count
-most_likely_vote_count <-
+# Get expected counts
 test_predictions |>
-  arrange(start_time, match, Round, expected_votes) |> 
-  group_by(match, Round) |> 
-  slice_tail( n = 3) |> 
-  mutate(predicted_votes = row_number()) |> 
+  group_by(player_name) |>
+  summarise(total_expected_votes = sum(expected_votes),
+            total_observed_votes = sum(as.numeric(as.character(brownlow_votes)))) |>
+  arrange(desc(total_expected_votes))
+
+#===============================================================================
+# Simulate medal count
+#===============================================================================
+
+# Convert test_predictions to data.table
+setDT(test_predictions)
+
+# All match and round combos
+unique_matches <- unique(test_predictions[, .(match_name = match, round_name = Round)])
+
+# Function to get votes for a given match
+sim_match_votes <- function(match_name, round_name) {
+  round_data <- test_predictions[match == match_name & Round == round_name]
+  
+  # Calculate probabilities in one go
+  round_data[, `:=`(three_vote_prob = `3` / sum(`3`),
+                    two_vote_prob = (`2` + `3`) / sum(`2` + `3`),
+                    one_vote_prob = (`1` + `2` + `3`) / sum(`1` + `2` + `3`))]
+  
+  # 3 votes
+  three_votes <- round_data[sample(.N, 1, prob = three_vote_prob), .(player_name, votes = 3)]
+  
+  # 2 votes
+  two_votes <- round_data[player_name != three_votes$player_name][sample(.N, 1, prob = two_vote_prob), .(player_name, votes = 2)]
+  
+  # 1 vote
+  one_votes <- round_data[!(player_name %in% c(three_votes$player_name, two_votes$player_name))][sample(.N, 1, prob = one_vote_prob), .(player_name, votes = 1)]
+  
+  # Combine
+  rbindlist(list(one_votes, two_votes, three_votes))[, c("match", "round") := .(match_name, round_name)]
+}
+
+# Function to map over all matches
+run_brownlow_sim <- function(i) {
+  full_simulated_count <- unique_matches[, sim_match_votes(match_name, round_name), by = 1:nrow(unique_matches)]
+  full_simulated_count[, sim_id := i]
+  full_simulated_count
+}
+
+sims <-
+  map(1:100, run_brownlow_sim) |> 
+  bind_rows() |> 
+  group_by(player_name, sim_id) |>
+  summarise(total = sum(votes)) |> 
+  arrange(desc(total))
+
+sims |> 
   group_by(player_name) |> 
-  summarise(total_votes = sum(predicted_votes)) |> 
+  summarise(total_votes = median(total)) |> 
   arrange(desc(total_votes))
-
-# Function to get 3, 2 and 1 votes from each match
-get_votes <- function(match_name, round) {
-  # Get selected match
-  match_data <-
-  test_predictions |>
-    filter(match == match_name, round == Round)
-  
-  # Perform sample votes count for match
-  pred_votes <- sample(match_data$player_name, size = 3, replace = FALSE, prob = match_data$expected_votes)
-  
-  # Create tibble
-  tibble(player_name = pred_votes, match = match_name, round = round, brownlow_votes = 3:1)
-}
-
-# Get distinct match numbers and rounds
-matches_2023 <-
-  distinct(test_predictions, match, Round) |>
-  rename(match_name = match, round = Round)
-
-# Map over each match and round to get brownlow votes dataset and repeat 1000 times
-empty_list = list()
-
-# Populate list
-for (i in 1:1000) {
-  to_add <-
-  pmap(matches_2023, get_votes) |>
-  bind_rows() |>
-  group_by(player_name) |>
-  summarise(vote_tally = sum(brownlow_votes)) |>
-  arrange(desc(vote_tally))
-  
-  # Add 'to_add' to 'empty_list'
-  empty_list[[i]] <- to_add
-}
-
-# Bind rows of empty list and get averages
-avg_preds <-
-  bind_rows(empty_list) |>
-  group_by(player_name) |>
-  summarise(mean = mean(vote_tally),
-            median = median(vote_tally),
-            `25th percentile` = quantile(vote_tally, 0.25),
-            `75th percentile` = quantile(vote_tally, 0.75)) |>
-  arrange(desc(mean))
-
-result <-
-  map(empty_list, ~ .x |>
-        arrange(desc(vote_tally)) |>
-        slice_head(n = 1)) |>
-  bind_rows() |>
-  group_by(player_name) |>
-  tally() |> 
-  arrange(desc(n)) |> 
-  mutate(n = n / sum(n))
-
-# Get by team probability-------------------------------------------------------
-
-# # Get player team data
-# player_teams <-
-# test |>
-#   separate(match, into = c("home_team", "away_team", sep = " v ", remove = TRUE)) |>
-#   group_by(player_name, home_team) |>
-#   tally() |>
-#   arrange(desc(n)) |>
-#   slice_head(n = 1) |>
-#   select(player_name, player_team = home_team)
-
-# # Get most votes by team
-# bind_rows(empty_list) |>
-#   left_join(player_teams) |>
-#   filter(player_team == "North") |>
-#   group_by(player_name) |>
-#   summarise(avg_votes = mean(vote_tally)) |>
-#   arrange(desc(avg_votes))
