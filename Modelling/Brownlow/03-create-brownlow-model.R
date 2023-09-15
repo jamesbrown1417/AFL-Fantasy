@@ -10,13 +10,42 @@ library(tidyverse)
 `%notin%` = base::Negate(`%in%`)
 library(data.table)
 library(rms)
+library(furrr)
 
 # Read in data
 brownlow_analysis_data <-
-  read_rds("Modelling/Brownlow/brownlow_analysis_data.rds") |>
-  mutate(brownlow_votes = ifelse(is.na(brownlow_votes), 0, brownlow_votes),
-         coaches_votes = ifelse(is.na(coaches_votes), 0, coaches_votes)) |>
-  mutate(brownlow_votes = factor(brownlow_votes, levels = c(0,1,2,3), ordered = TRUE))
+  read_rds("Modelling/Brownlow/brownlow_analysis_data.rds")
+
+# Create votes per game in previous season variable
+votes_per_game <-
+  brownlow_analysis_data |>
+  group_by(player_name, season) |>
+  summarise(avg_votes_per_game_prev_season = mean(brownlow_votes, na.rm = TRUE)) |>
+  mutate(season = season + 1)
+
+# Career votes
+career_votes <-
+  brownlow_analysis_data |>
+  group_by(player_name) |>
+  summarise(career_avg_brownlow_votes = mean(brownlow_votes, na.rm = TRUE))
+
+brownlow_analysis_data <-
+  brownlow_analysis_data |>
+  mutate(
+    brownlow_votes = ifelse(is.na(brownlow_votes), 0, brownlow_votes),
+    coaches_votes = ifelse(is.na(coaches_votes), 0, coaches_votes)
+  ) |>
+  mutate(brownlow_votes = factor(
+    brownlow_votes,
+    levels = c(0, 1, 2, 3),
+    ordered = TRUE
+  ))
+
+# Add voting history variable
+brownlow_analysis_data <-
+  brownlow_analysis_data |>
+  left_join(votes_per_game) |>
+  left_join(career_votes)
 
 # Split into test and training data
 test <- brownlow_analysis_data |> filter(Season == 2023)
@@ -32,14 +61,15 @@ training <- brownlow_analysis_data |> filter(Season < 2023)
 pred_model <-
   polr(
     brownlow_votes ~
-      coaches_votes +
+      rcs(coaches_votes, 5) +
       disposal_efficiency +
-      contested_possessions*uncontested_possessions +
+      contested_possessions +
+      uncontested_possessions +
       kicks +
       handballs +
       marks +
       tackles +
-      rating_points +
+      rcs(rating_points, 5) +
       metres_gained +
       goals +
       goal_assists +
@@ -53,7 +83,8 @@ pred_model <-
       pressure_acts +
       inside_fifties +
       rebounds +
-      rcs(margin, 4),
+      rcs(career_avg_brownlow_votes, 5) +
+      rcs(margin, 5),
     data = training,
     Hess = TRUE
   )
@@ -74,14 +105,17 @@ test_predictions <-
          `3` = `3` / sum(`3`, na.rm = TRUE)) |>
   mutate(expected_votes = 0*`0` + 1*`1` + 2*`2` + 3*`3`) |>
   arrange(start_time, match, desc(expected_votes)) |>
-  slice_head(n = 10) |> 
+  slice_head(n = 10) |>
   mutate(expected_votes = expected_votes * (6/sum(expected_votes))) |> 
   ungroup()
 
 # Get expected counts
+expected_counts <-
 test_predictions |>
   group_by(player_name) |>
-  summarise(total_expected_votes = sum(expected_votes),
+  summarise(
+    games = n(),
+    total_expected_votes = sum(expected_votes),
             total_observed_votes = sum(as.numeric(as.character(brownlow_votes)))) |>
   arrange(desc(total_expected_votes))
 
@@ -124,14 +158,52 @@ run_brownlow_sim <- function(i) {
   full_simulated_count
 }
 
+# Set up parallel processing
+plan(multisession, workers = 12)
+
 sims <-
-  map(1:100, run_brownlow_sim) |> 
+  future_map(1:10000, run_brownlow_sim, .progress = TRUE) |> 
   bind_rows() |> 
   group_by(player_name, sim_id) |>
   summarise(total = sum(votes)) |> 
   arrange(desc(total))
 
+# Get player team and name
+player_teams <- 
+brownlow_analysis_data |> 
+  filter(season == 2023) |>
+  distinct(player_name, player_team)
+
+# Expected votes
 sims |> 
   group_by(player_name) |> 
-  summarise(total_votes = median(total)) |> 
-  arrange(desc(total_votes))
+  summarise(avg_votes = mean(total)) |> 
+  arrange(desc(avg_votes))
+
+# Win probability
+sims |> 
+  arrange(sim_id, desc(total)) |>
+  group_by(sim_id) |>
+  slice_head(n = 1) |> 
+  ungroup() |> 
+  group_by(player_name) |> 
+  tally() |> 
+  arrange(desc(n)) |>
+  mutate(win_prob = n / 10000) |>
+  mutate(implied_odds = 1/win_prob)
+
+# Team votes winner
+sims |> 
+  arrange(sim_id, desc(total)) |>
+  group_by(sim_id) |>
+  left_join(player_teams) |>
+  filter(player_team == "Gold Coast Suns") |>
+  slice_head(n = 1) |> 
+  ungroup() |> 
+  group_by(player_name) |> 
+  tally() |> 
+  arrange(desc(n)) |>
+  mutate(win_prob = n / 10000) |>
+  mutate(implied_odds = 1/win_prob)
+
+
